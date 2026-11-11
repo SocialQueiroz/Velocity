@@ -50,6 +50,12 @@ public class VehicleEntity extends Entity {
     public static final String DEFAULT_DEFINITION = "velocity:aurion_vx";
     /** Ids renomeados entre versões: id antigo → id atual (mantém veículos de saves antigos). */
     private static final java.util.Map<String, String> LEGACY_IDS = java.util.Map.of("velocity:aurion_vx_prototype", "velocity:aurion_vx");
+    /** Escala visual dos ocupantes (ver PlayerEntityRendererMixin). */
+    public static final float OCCUPANT_RENDER_SCALE = 0.80f;
+    /** Altura do olho do motorista sentado acima do solo, em metros (câmera interna). */
+    public static final double SEAT_EYE_HEIGHT = 1.05;
+    /** Posição do quadril do motorista (assento 0) no espaço do veículo: x à esquerda, y, z à frente. */
+    private static final double SEAT_X = 0.40, SEAT_HIP_Y = 0.27, SEAT_Z = -0.30;
     private static final int INPUT_TIMEOUT_TICKS = 10;
     private static final float TICK_DT = 0.05f;
     private static final float GRAVITY_PER_TICK = 0.08f;
@@ -125,11 +131,14 @@ public class VehicleEntity extends Entity {
 
     @Override
     protected Vec3d getPassengerAttachmentPos(Entity passenger, EntityDimensions dimensions, float scaleFactor) {
-        // Assento 0 = motorista (esquerda-dianteiro), 1 = passageiro, 2+ = traseiros.
+        // Assento 0 = motorista (esquerda, +X), 1 = passageiro. O ponto de fixação do jogador (0,6 m) fica
+        // abaixo do quadril do modelo sentado em 0,75 × 0,9375 × escala-dos-ocupantes.
         int seat = Math.max(0, getPassengerList().indexOf(passenger));
-        double side = (seat % 2 == 0) ? 0.4 : -0.4;
-        double forward = seat < 2 ? -0.1 : -0.9;
-        return new Vec3d(side, 0.15, forward).rotateY(-getYaw() * MathHelper.RADIANS_PER_DEGREE);
+        double side = (seat % 2 == 0) ? SEAT_X : -SEAT_X;
+        double forward = seat < 2 ? SEAT_Z : SEAT_Z - 0.8;
+        double hipAboveFeet = 0.75 * 0.9375 * OCCUPANT_RENDER_SCALE;
+        double attachY = SEAT_HIP_Y - hipAboveFeet + 0.6;
+        return new Vec3d(side, attachY, forward).rotateY(-getYaw() * MathHelper.RADIANS_PER_DEGREE);
     }
 
     @Override

@@ -5,6 +5,40 @@ Downloads: pasta [`releases/`](releases/). Instale o jar em `.minecraft/mods` ju
 
 ---
 
+## Velo 0.05 — Interior completo e câmera interna
+**Jar:** `releases/Velocity-Velo-0.05-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
+
+![Velo 0.05](docs/screenshots/velo-0.05.png)
+
+### Novidades
+- **Interior do Aurion VX:** painel em plástico macio com faixa de alcântara e costura amarela,
+  capuz do quadro de instrumentos com **tela digital**, **central multimídia**, 4 saídas de ar
+  com aletas de alumínio, console central alto com seletor de câmbio curto, **bancos concha**
+  (almofada, encosto, abas laterais, apoio de cabeça integrado, trilhos), forros de porta com
+  apoio de braço e puxador, pedais de alumínio, carpete, retrovisor interno e forro de teto.
+- **Volante animado** (base reta, 3 raios, aro em couro, aletas de troca): gira com o esterço
+  numa relação de 12:1, em torno do eixo inclinado da coluna de direção.
+- **Telas acendem quando o motor está ligado** (novo canal de luz "engine").
+- **Câmera interna:** em primeira pessoa, o olho fica na altura de um motorista sentado (1,05 m),
+  no banco da esquerda — dá para dirigir olhando pelo para-brisa, com painel e volante à frente.
+- **Ocupantes em escala:** o jogador sentado é desenhado em 80 % do tamanho para caber sob o
+  teto em escala real (o boneco do Minecraft tem cabeça muito grande).
+- Vidros mais transparentes para o interior aparecer por fora.
+- Modelos: animações agora aceitam **eixo e fator** configuráveis no JSON (`axis`, `factor`).
+
+### Testado
+- Teste visual: vista do interior, ponto de vista do motorista, volante esterçado à direita
+  (gira no sentido horário), jogador sentado em 1ª pessoa (câmera no banco, abaixo do teto) e
+  em 3ª pessoa (cabeça dentro da cabine).
+
+### Limitações conhecidas
+- As telas ainda não mostram velocidade/RPM (painel funcional na Velo 0.09, junto da HUD).
+- Portas não abrem (Velo 0.06); entrar/sair ainda é clique direito / Shift.
+- Jogadores aparecem 20 % menores só dentro do veículo — escolha visual consciente.
+- Os mixins de câmera/escala só existem no cliente; servidores não são afetados.
+
+---
+
 ## Velo 0.04 — Freios, suspensão e caixas de roda
 **Jar:** `releases/Velocity-Velo-0.04-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
 

@@ -20,7 +20,7 @@ GH_FRONT, GH_PEAK0, GH_PEAK1, GH_REAR = 0.62, -0.12, -0.50, -1.78   # para-brisa
 
 atlas = Atlas({
     "paint":     (236, 236, 236, 255),
-    "glass":     (22, 30, 40, 215),
+    "glass":     (22, 30, 40, 150),
     "trim":      (18, 18, 20, 255),     # plástico preto texturizado
     "carbon":    (34, 36, 40, 255),
     "tire":      (24, 24, 26, 255),
@@ -40,6 +40,13 @@ atlas = Atlas({
     "steel":     (88, 92, 98, 255),
     "spring":    (200, 40, 40, 255),
     "liner":     (14, 14, 15, 255),
+    "leather":   (40, 34, 32, 255),        # couro sintético escuro
+    "alcantara": (58, 58, 62, 255),
+    "stitch":    (226, 168, 24, 255),      # costura amarela (combina com as pinças)
+    "carpet":    (30, 30, 32, 255),
+    "dash":      (26, 27, 30, 255),        # plástico macio do painel
+    "display":   (36, 120, 200, 255),      # telas (emissivas)
+    "alu":       (150, 152, 156, 255),     # alumínio escovado
 })
 
 # ---------------------------------------------------------------- perfis (funções de z)
@@ -160,6 +167,13 @@ def build():
     # moldura das janelas (borracha preta) e coluna B escurecida
     both(5, -0.86, 0.36, 0.55, 1.00, "trim", off=0.002)
     both(6, -0.20, -0.16, 0.00, 1.00, "trim", off=0.003)
+    # forro de teto e colunas por dentro (faixas deslocadas 1 cm para dentro; invisíveis por fora)
+    body.decal(m, "interior", "alcantara", 7, GH_PEAK1 - 0.04, GH_PEAK0 + 0.02, 0.0, 1.0, -0.012)
+    body.decal(m, "interior", "alcantara", 7, -1.78, -1.48, 0.0, 1.0, -0.012)
+    for seg in (6, mirror(6)):
+        body.decal(m, "interior", "alcantara", seg, 0.30, GH_FRONT, 0.0, 1.0, -0.012)
+        body.decal(m, "interior", "alcantara", seg, -1.78, -0.84, 0.0, 1.0, -0.012)
+        body.decal(m, "interior", "alcantara", seg, -0.22, -0.14, 0.0, 1.0, -0.012)
     # saídas de ar do capô
     both(6, 1.02, 1.32, 0.45, 0.85, "trim")
     # bocal de combustível (lado direito, traseira)
@@ -204,8 +218,12 @@ def build():
         box(m, "mirrors", "paint", sx * (hw + 0.05), 0.90, 0.36, sx * (hw + 0.21), 1.01, 0.48)
         box(m, "mirrors", "mirror", sx * (hw + 0.06), 0.91, 0.355, sx * (hw + 0.20), 1.00, 0.362)
 
-    # ------ assoalho / banheira (visível pelas caixas de roda)
-    box(m, "underbody", "underbody", -0.58, 0.14, -2.0, 0.58, 0.64, 2.0)
+    # ------ estrutura: cofre do motor (frente), assoalho rebaixado na cabine, porta-malas (trás)
+    box(m, "underbody", "underbody", -0.58, 0.14, 0.62, 0.58, 0.64, 2.0)
+    box(m, "underbody", "underbody", -0.58, 0.14, -2.0, 0.58, 0.64, -0.98)
+    box(m, "underbody", "underbody", -0.80, 0.12, -0.98, 0.80, 0.17, 0.62)
+
+    interior(m)
 
     # ------ caixas de roda (para-barro), freios e suspensão
     for corner, (x, z, side) in {"fl": (TRACK_F, FRONT_AXLE, 1), "fr": (-TRACK_F, FRONT_AXLE, -1),
@@ -224,6 +242,104 @@ def build():
     for name, (x, z, side, w, rim_r) in wheels.items():
         wheel(m, name, x, WHEEL_R, z, side, w, rim_r)
     return m
+
+SEAT_X, SEAT_HIP_Y, SEAT_Z = 0.40, 0.27, -0.30          # quadril do motorista (igual ao VehicleEntity)
+SW_CENTER = (SEAT_X, 0.86, 0.14)                         # centro do volante
+SW_TILT = math.radians(22)                               # inclinação da coluna em relação à vertical
+
+def steering_axis():
+    # eixo da coluna aponta do volante para o painel: para frente (+Z) e para baixo
+    return (0.0, -math.sin(SW_TILT), math.cos(SW_TILT))
+
+def interior(m):
+    I = "interior"
+    hw_cab = half_width(-0.2) * 0.86
+    # assoalho com carpete, túnel central, firewall e anteparo traseiro
+    box(m, I, "carpet", -0.78, 0.17, -0.96, 0.78, 0.19, 0.60)
+    box(m, I, "carpet", -0.14, 0.17, -0.96, 0.14, 0.34, 0.60)
+    box(m, I, "carpet", -0.78, 0.19, 0.50, 0.78, 0.62, 0.60)
+    box(m, I, "alcantara", -0.80, 0.19, -1.00, 0.80, 0.98, -0.94)
+    # painel: corpo principal, parte superior inclinada sob o para-brisa
+    beam(m, I, "dash", (-0.80, 0.74, 0.42), (0.80, 0.74, 0.42), 0.34, 0.16)
+    beam(m, I, "alcantara", (-0.80, 0.84, 0.50), (0.80, 0.84, 0.50), 0.22, 0.05)
+    box(m, I, "stitch", -0.80, 0.818, 0.247, 0.80, 0.822, 0.252)
+    # capuz do quadro de instrumentos + tela digital 12,3" (emissiva)
+    box(m, I, "dash", SEAT_X - 0.20, 0.82, 0.24, SEAT_X + 0.20, 0.95, 0.40)
+    box(m, I, "display", SEAT_X - 0.17, 0.835, 0.236, SEAT_X + 0.17, 0.925, 0.242)
+    # central multimídia e saídas de ar (4)
+    box(m, I, "dash", -0.14, 0.76, 0.25, 0.14, 0.92, 0.30)
+    box(m, I, "display", -0.12, 0.775, 0.246, 0.12, 0.905, 0.252)
+    for x in (-0.66, -0.22, 0.22 - 0.0, 0.66):
+        if abs(x - SEAT_X) < 0.15: continue
+        box(m, I, "trim", x - 0.07, 0.70, 0.244, x + 0.07, 0.76, 0.252)
+        for k in range(3):
+            box(m, I, "alu", x - 0.065, 0.712 + k * 0.016, 0.240, x + 0.065, 0.716 + k * 0.016, 0.244)
+    # console central alto com seletor de câmbio curto
+    box(m, I, "leather", -0.13, 0.34, -0.70, 0.13, 0.50, 0.30)
+    box(m, I, "stitch", -0.131, 0.495, -0.70, 0.131, 0.499, 0.30)
+    box(m, I, "trim", -0.10, 0.50, -0.30, 0.10, 0.52, 0.05)
+    box(m, I, "alu", -0.012, 0.52, -0.13, 0.012, 0.58, -0.11)
+    box(m, I, "leather", -0.035, 0.58, -0.155, 0.035, 0.62, -0.085)
+    # bancos concha (motorista à esquerda, +X)
+    for sx in (1, -1):
+        x = sx * SEAT_X
+        beam(m, I, "alcantara", (x, SEAT_HIP_Y - 0.04, -0.40), (x, SEAT_HIP_Y - 0.01, 0.06), 0.40, 0.08)    # almofada
+        beam(m, I, "alcantara", (x, SEAT_HIP_Y + 0.02, -0.46), (x, 0.98, -0.66), 0.40, 0.08)              # encosto
+        for bx in (-0.22, 0.22):                                                                           # abas laterais
+            beam(m, I, "leather", (x + bx, SEAT_HIP_Y + 0.01, -0.40), (x + bx, SEAT_HIP_Y + 0.05, 0.04), 0.07, 0.12)
+            beam(m, I, "leather", (x + bx, SEAT_HIP_Y + 0.06, -0.48), (x + bx, 0.80, -0.60), 0.07, 0.14)
+        beam(m, I, "leather", (x, 0.94, -0.645), (x, 1.12, -0.69), 0.26, 0.08)                            # apoio de cabeça
+        box(m, I, "stitch", x - 0.005, SEAT_HIP_Y + 0.12, -0.62, x + 0.005, 0.93, -0.51)
+        box(m, I, "steel", x - 0.24, 0.17, -0.45, x + 0.24, SEAT_HIP_Y - 0.08, 0.05)                     # base/trilhos
+        # forro de porta com apoio de braço e puxador
+        xd = sx * (hw_cab + 0.01)
+        box(m, I, "leather", xd - sx * 0.03, 0.30, -0.80, xd, 0.86, 0.40)
+        box(m, I, "alcantara", xd - sx * 0.09, 0.52, -0.55, xd - sx * 0.03, 0.57, 0.15)
+        box(m, I, "alu", xd - sx * 0.05, 0.62, -0.05, xd - sx * 0.032, 0.66, 0.10)
+    # pedais (motorista): acelerador e freio
+    box(m, I, "alu", SEAT_X - 0.16, 0.24, 0.47, SEAT_X - 0.04, 0.34, 0.49)
+    box(m, I, "alu", SEAT_X + 0.04, 0.22, 0.48, SEAT_X + 0.10, 0.36, 0.50)
+    # retrovisor interno
+    box(m, I, "trim", -0.01, 1.14, -0.10, 0.01, 1.22, -0.09)
+    box(m, I, "trim", -0.12, 1.09, -0.12, 0.12, 1.15, -0.09)
+    box(m, I, "mirror", -0.11, 1.095, -0.124, 0.11, 1.145, -0.120)
+    # coluna de direção (fixa)
+    cx, cy, cz = SW_CENTER
+    ax = steering_axis()
+    beam(m, I, "dash", (cx, cy + ax[1] * 0.05, cz + ax[2] * 0.05), (cx, cy + ax[1] * 0.30, cz + ax[2] * 0.30), 0.09, 0.09)
+    steering_wheel(m)
+
+def steering_wheel(m):
+    """Volante de base reta com 3 raios, aro em couro e aletas de troca (parte animada)."""
+    P = "steering_wheel"
+    cx, cy, cz = SW_CENTER
+    ax = steering_axis()
+    up = norm3((0.0, math.cos(SW_TILT), math.sin(SW_TILT)))   # "cima" do volante
+    right = (-1.0, 0.0, 0.0)                                    # direita do motorista (-X)
+    def at(u, v, w=0.0):   # u = direita, v = cima, w = ao longo do eixo
+        return (cx + right[0] * u + up[0] * v + ax[0] * w, cy + right[1] * u + up[1] * v + ax[1] * w,
+                cz + right[2] * u + up[2] * v + ax[2] * w)
+    R, seg = 0.175, 28
+    ring = []
+    for k in range(seg + 1):
+        a = 2 * math.pi * k / seg
+        u, v = R * math.sin(a), R * math.cos(a)
+        if v < -0.13: v = -0.13                                   # base reta
+        ring.append((u, v))
+    for k in range(seg):
+        (u0, v0), (u1, v1) = ring[k], ring[k + 1]
+        beam(m, P, "leather", at(u0, v0), at(u1, v1), 0.03, 0.03)
+    beam(m, P, "stitch", at(-0.012, R - 0.006, -0.016), at(0.012, R - 0.006, -0.016), 0.012, 0.006)   # marca 12h
+    for u, v in ((-0.16, 0.0), (0.16, 0.0), (0.0, -0.13)):        # 3 raios
+        beam(m, P, "alu", at(0, 0, 0.01), at(u, v, 0.0), 0.04, 0.012)
+    beam(m, P, "dash", at(0, 0.03, 0.02), at(0, -0.05, 0.02), 0.11, 0.05)   # cubo (airbag)
+    box(m, P, "chrome", *[a - 0.012 for a in at(0, 0.0, -0.004)], *[a + 0.012 for a in at(0, 0.0, -0.004)])
+    for side in (-1, 1):                                          # aletas
+        beam(m, P, "alu", at(side * 0.12, 0.04, 0.05), at(side * 0.22, 0.06, 0.05), 0.012, 0.03)
+
+def norm3(v):
+    l = math.sqrt(sum(c * c for c in v)) or 1.0
+    return tuple(c / l for c in v)
 
 DISC_X_IN = 0.085   # deslocamento do disco para dentro do centro do pneu
 
@@ -345,12 +461,15 @@ def main():
             **{f"disc_{c}": {"parent": f"wheel_{c}"} for c in ("fl", "fr", "rl", "rr")},
             **{f"{p}_{c}": {"parent": f"steer_{c}"} for p in ("caliper", "knuckle") for c in ("fl", "fr")},
             **{f"pad_{c}_{s}": {"parent": f"steer_{c}"} for c in ("fl", "fr") for s in ("inner", "outer")},
+            "steering_wheel": {"pivot": list(SW_CENTER), "animation": "steering_wheel",
+                               "axis": list(steering_axis()), "factor": 12.0},
         },
         "materials": {
             "paint": {"role": "paint"},
             "glass": {"role": "translucent"},
             "headlight": {"role": "emissive", "light": "headlights"},
             "drl": {"role": "emissive", "light": "always"},
+            "display": {"role": "emissive", "light": "engine"},
             "taillight": {"role": "emissive", "light": "tail"},
         },
     }

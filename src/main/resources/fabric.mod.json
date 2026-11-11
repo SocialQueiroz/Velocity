@@ -11,6 +11,7 @@
     "main": ["dev.velocity.core.VelocityMod"],
     "client": ["dev.velocity.client.VelocityClient"]
   },
+  "mixins": [{ "config": "velocity.client.mixins.json", "environment": "client" }],
   "depends": {
     "fabricloader": ">=0.16.0",
     "minecraft": "~1.21.1",

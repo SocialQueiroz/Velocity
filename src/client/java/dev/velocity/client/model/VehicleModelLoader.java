@@ -37,7 +37,17 @@ import java.util.Optional;
 public final class VehicleModelLoader {
     private VehicleModelLoader() {}
 
-    private record Decl(String parent, Vector3f pivot, String animation) {}
+    private record Decl(String parent, Vector3f pivot, String animation, Vector3f axis, float factor) {}
+
+    /** Eixo e fator padrão por fonte de animação. */
+    private static Vector3f defaultAxis(String anim) {
+        return switch (anim) { case "steer" -> new Vector3f(0, 1, 0); case "steering_wheel" -> new Vector3f(0, 0, 1); default -> new Vector3f(1, 0, 0); };
+    }
+
+    private static float defaultFactor(String anim) {
+        // esterço positivo = direita = rodas apontando para -X → rotação negativa em Y
+        return switch (anim) { case "steer" -> -1f; case "steering_wheel" -> 12f; default -> 1f; };
+    }
 
     public static BakedVehicleModel load(Identifier id, JsonObject json, ResourceManager manager) throws IOException {
         Identifier meshId = Identifier.of(json.get("mesh").getAsString());
@@ -64,7 +74,7 @@ public final class VehicleModelLoader {
 
         // Declarações de partes (pai, pivô, animação)
         Map<String, Decl> decls = new LinkedHashMap<>();
-        decls.put("root", new Decl(null, new Vector3f(), "none"));
+        decls.put("root", new Decl(null, new Vector3f(), "none", new Vector3f(1, 0, 0), 1f));
         if (json.has("parts")) {
             for (Map.Entry<String, JsonElement> e : json.getAsJsonObject("parts").entrySet()) {
                 JsonObject p = e.getValue().getAsJsonObject();
@@ -73,11 +83,19 @@ public final class VehicleModelLoader {
                     var a = p.getAsJsonArray("pivot");
                     pivot.set(a.get(0).getAsFloat(), a.get(1).getAsFloat(), a.get(2).getAsFloat());
                 }
-                decls.put(e.getKey(), new Decl(p.has("parent") ? p.get("parent").getAsString() : "root", pivot,
-                        p.has("animation") ? p.get("animation").getAsString() : "none"));
+                String anim = p.has("animation") ? p.get("animation").getAsString() : "none";
+                Vector3f axis = defaultAxis(anim);
+                if (p.has("axis")) {
+                    var a = p.getAsJsonArray("axis");
+                    axis.set(a.get(0).getAsFloat(), a.get(1).getAsFloat(), a.get(2).getAsFloat());
+                    if (axis.lengthSquared() < 1e-8f) throw new IOException("eixo nulo na parte '" + e.getKey() + "'");
+                    axis.normalize();
+                }
+                float factor = p.has("factor") ? p.get("factor").getAsFloat() : defaultFactor(anim);
+                decls.put(e.getKey(), new Decl(p.has("parent") ? p.get("parent").getAsString() : "root", pivot, anim, axis, factor));
             }
         }
-        for (String partName : mesh.parts().keySet()) decls.putIfAbsent(partName, new Decl("root", new Vector3f(), "none"));
+        for (String partName : mesh.parts().keySet()) decls.putIfAbsent(partName, new Decl("root", new Vector3f(), "none", new Vector3f(1, 0, 0), 1f));
 
         // Valida pais e ciclos
         for (Map.Entry<String, Decl> e : decls.entrySet()) {
@@ -95,12 +113,11 @@ public final class VehicleModelLoader {
         Map<String, List<String>> children = new HashMap<>();
         decls.forEach((name, d) -> { if (d.parent() != null) children.computeIfAbsent(d.parent(), k -> new ArrayList<>()).add(name); });
         int[] tris = {0};
-        BakedVehicleModel.Part root = build("root", decls.get("root").pivot(), decls.get("root").animation(),
-                decls, children, mesh, roles, lights, tris);
+        BakedVehicleModel.Part root = build("root", decls.get("root"), decls, children, mesh, roles, lights, tris);
         return new BakedVehicleModel(id, texture, paint, root, tris[0]);
     }
 
-    private static BakedVehicleModel.Part build(String name, Vector3f pivot, String animation,
+    private static BakedVehicleModel.Part build(String name, Decl decl,
             Map<String, Decl> decls, Map<String, List<String>> children, ObjParser.Mesh mesh,
             Map<String, MaterialRole> roles, Map<String, String> lights, int[] tris) {
         List<BakedVehicleModel.Batch> batches = new ArrayList<>();
@@ -112,10 +129,10 @@ public final class VehicleModelLoader {
         }
         List<BakedVehicleModel.Part> kids = new ArrayList<>();
         for (String child : children.getOrDefault(name, List.of())) {
-            Decl d = decls.get(child);
-            kids.add(build(child, d.pivot(), d.animation(), decls, children, mesh, roles, lights, tris));
+            kids.add(build(child, decls.get(child), decls, children, mesh, roles, lights, tris));
         }
-        return new BakedVehicleModel.Part(name, pivot, animation, List.copyOf(batches), List.copyOf(kids));
+        return new BakedVehicleModel.Part(name, decl.pivot(), decl.animation(), decl.axis(), decl.factor(),
+                List.copyOf(batches), List.copyOf(kids));
     }
 
     private static float[] bake(List<ObjParser.Face> faces, int[] tris) {

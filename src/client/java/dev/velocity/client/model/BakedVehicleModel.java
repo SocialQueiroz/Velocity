@@ -22,7 +22,11 @@ public record BakedVehicleModel(Identifier id, Identifier texture, int defaultPa
     }
 
     /**
-     * @param animation ligação de animação procedural: "none", "wheel_spin", "steer"
+     * @param animation fonte da animação procedural: "none", "wheel_spin" (rad), "steer" (rad das rodas),
+     *                  "steering_wheel" (rad das rodas × fator)
+     * @param axis      eixo de rotação no espaço do modelo (normalizado)
+     * @param factor    multiplicador aplicado ao valor da fonte
      */
-    public record Part(String name, Vector3f pivot, String animation, List<Batch> batches, List<Part> children) {}
+    public record Part(String name, Vector3f pivot, String animation, Vector3f axis, float factor,
+                       List<Batch> batches, List<Part> children) {}
 }

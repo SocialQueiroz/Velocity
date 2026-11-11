@@ -40,7 +40,7 @@ public class VehicleEntityRenderer extends EntityRenderer<VehicleEntity> {
         if (model != null) {
             float spin = entity.prevWheelSpin + (entity.wheelSpin - entity.prevWheelSpin) * tickDelta;
             var pose = new VehicleMeshRenderer.Pose(spin, (float) Math.toRadians(entity.getSteerDeg()),
-                    model.defaultPaint(), entity.areLightsOn(), entity.isBraking());
+                    model.defaultPaint(), entity.areLightsOn(), entity.isBraking(), entity.isEngineOn());
             VehicleMeshRenderer.render(model, pose, matrices, consumers, light);
         } else {
             renderFallback(entity, tickDelta, matrices, consumers, light);

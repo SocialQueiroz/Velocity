@@ -45,8 +45,9 @@ public final class VisualTestHarness {
         double[][] v = {
                 {5.5, 1.6, 35, 0, 0.6, 0}, {5.5, 1.8, 215, 0, 0.6, 0}, {6.5, 1.0, 90, 0, 0.6, 0}, {6, 1.2, 0, 0, 0.6, 0},
                 {0.01, 9, 0, 0, 0.6, 0}, {2.6, 1.75, 62, 0, 0.6, 0},
-                {1.0, 0.50, 80, 0.81, 0.34, 1.28}, {1.0, 0.50, 100, 0.82, 0.34, -1.34}, {0.9, 0.75, 35, 0.81, 0.34, 1.28}};
-        String[] names = {"front34", "rear34", "side", "front", "top", "low_wheel", "brake_fl", "brake_rl", "brake_fl_front"};
+                {1.0, 0.50, 80, 0.81, 0.34, 1.28}, {1.0, 0.50, 100, 0.82, 0.34, -1.34}, {0.9, 0.75, 35, 0.81, 0.34, 1.28},
+                {1.03, 1.08, 223, 0.35, 0.85, 0.30}, {0.92, 1.06, 180, 0.40, 0.95, 0.62}};
+        String[] names = {"front34", "rear34", "side", "front", "top", "low_wheel", "brake_fl", "brake_rl", "brake_fl_front", "interior", "cockpit"};
         for (int i = 0; i < v.length; i++) {
             final String name = names[i];
             final double[] q = v[i];
@@ -65,8 +66,8 @@ public final class VisualTestHarness {
         // esterçamento: liga motor, esterça à direita parado, vista de cima
         steps.add(new Step(t, c -> server(c, s -> { s.getOverworld().setTimeOfDay(6000); vehicle.handleAction(1); vehicle.handleAction(0); })));
         for (int i = 0; i < 40; i += 2) steps.add(new Step(t + i, c -> server(c, s -> vehicle.receiveInput(new VehicleInput(0, 0, 1, false)))));
-        steps.add(new Step(t + 4, c -> placeCamera(c, 0.01, 8, 0, DEFAULT_TARGET)));
-        steps.add(new Step(t + 38, c -> shot(c, "steer_right_top")));
+        steps.add(new Step(t + 4, c -> placeCamera(c, 0.92, 1.06, 180, new Vec3d(0.40, 0.95, 0.62))));
+        steps.add(new Step(t + 38, c -> shot(c, "cockpit_steer_right")));
         t += 45;
         // direção: anda com esterço à direita e verifica sentido da guinada pelo log
         final float[] yaw0 = new float[1];
@@ -75,7 +76,21 @@ public final class VisualTestHarness {
         steps.add(new Step(t + 62, c -> server(c, s -> VelocityMod.LOGGER.info(
                 "VISUALTEST guinada com esterço à direita: Δyaw = {} (positivo = horário visto de cima = direita)",
                 vehicle.getYaw() - yaw0[0]))));
-        steps.add(new Step(t + 70, MinecraftClient::scheduleStop));
+        t += 70;
+        // jogador sentado: escala do ocupante (3ª pessoa) e câmera interna (1ª pessoa)
+        steps.add(new Step(t, c -> server(c, s -> {
+            ServerPlayerEntity p = s.getPlayerManager().getPlayerList().get(0);
+            p.changeGameMode(net.minecraft.world.GameMode.CREATIVE);
+            vehicle.setYaw(0f);
+            vehicle.refreshPositionAndAngles(CAR.x, CAR.y, CAR.z, 0f, 0f);
+            p.startRiding(vehicle, true);
+            p.setYaw(0f); p.setPitch(5f);
+        })));
+        steps.add(new Step(t + 20, c -> { c.player.setYaw(0f); c.player.setPitch(8f); }));
+        steps.add(new Step(t + 30, c -> shot(c, "ride_first_person")));
+        steps.add(new Step(t + 32, c -> c.options.setPerspective(Perspective.THIRD_PERSON_FRONT)));
+        steps.add(new Step(t + 50, c -> shot(c, "ride_third_person")));
+        steps.add(new Step(t + 60, MinecraftClient::scheduleStop));
 
         ClientTickEvents.END_CLIENT_TICK.register(VisualTestHarness::onTick);
     }
