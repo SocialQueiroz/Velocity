@@ -42,3 +42,16 @@ java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
+
+// ---------------------------------------------------------------------------
+// Entrega: copia o jar final para releases/ com versão do mod + versão do jogo.
+// Uso: ./gradlew release   →  releases/Velocity-Velo-<versão>-MC<versão-do-jogo>.jar
+// ---------------------------------------------------------------------------
+tasks.register('release', Copy) {
+    group = 'velocity'
+    description = 'Gera o jar remapeado e o coloca em releases/'
+    dependsOn tasks.named('remapJar'), tasks.named('test')
+    from(tasks.named('remapJar').flatMap { it.archiveFile })
+    into(layout.projectDirectory.dir('releases'))
+    rename { "Velocity-Velo-${project.mod_version}-MC${project.minecraft_version}.jar" }
+}

@@ -1,6 +1,10 @@
 # VELOCITY — Ultimate Vehicle Mod
 
-Mod de veículos para **Minecraft Java 1.21.1 / Fabric / Java 21**. Atualmente na **Fase 1 (fundação)**.
+Mod de veículos para **Minecraft Java 1.21.1 / Fabric / Java 21**. Versão atual: **Velo 0.01**.
+
+- **Download:** pasta [`releases/`](releases/) (um jar por versão, com a versão do jogo no nome)
+- **Novidades:** [`PATCH_NOTES.md`](PATCH_NOTES.md)
+- **Próximas versões:** [`ROADMAP.md`](ROADMAP.md)
 Arquitetura, pipeline de assets e critérios de qualidade: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Compilar
@@ -8,9 +12,10 @@ Arquitetura, pipeline de assets e critérios de qualidade: [`docs/ARCHITECTURE.m
 ./gradlew build          # jar em build/libs/
 ./gradlew test           # testes da física
 ./gradlew runClient      # abre o Minecraft de desenvolvimento
+./gradlew release        # gera releases/Velocity-Velo-<versão>-MC<jogo>.jar
 ```
 
-## Testar no jogo (Fase 1)
+## Testar no jogo (Velo 0.01)
 1. `./gradlew runClient`, crie um mundo em modo criativo.
 2. Na aba **Ferramentas**, pegue **Aurion VX (Protótipo)** e clique com o botão direito no chão.
 3. Clique com o botão direito no veículo para entrar. **N** liga o motor.
