@@ -155,3 +155,42 @@ class Loft:
                 nrm = norm(add(mul(self.vnormal(s, seg), 1-u), mul(self.vnormal(s+1, seg), u)))
                 return add(p, mul(nrm, offset))
             m.face(part, mat, [pt(u0, t0), pt(u1, t0), pt(u1, t1), pt(u0, t1)])
+
+def annulus_sector(m, part, mat, axis_x, cy, cz, r0, r1, a0, a1, x0, x1, seg=8):
+    """Prisma em forma de setor de coroa circular (eixo X): pinças, pastilhas, para-barros."""
+    P = lambda x, r, a: (x, cy + r*math.cos(a), cz + r*math.sin(a))
+    xa, xb = min(x0, x1), max(x0, x1)
+    for k in range(seg):
+        a, b = a0 + (a1-a0)*k/seg, a0 + (a1-a0)*(k+1)/seg
+        m.face(part, mat, [P(xa, r1, a), P(xa, r1, b), P(xb, r1, b), P(xb, r1, a)])     # externo
+        m.face(part, mat, [P(xb, r0, a), P(xb, r0, b), P(xa, r0, b), P(xa, r0, a)])     # interno
+        m.face(part, mat, [P(xb, r0, a), P(xb, r1, a), P(xb, r1, b), P(xb, r0, b)])     # face +x
+        m.face(part, mat, [P(xa, r0, b), P(xa, r1, b), P(xa, r1, a), P(xa, r0, a)])     # face -x
+    for a in (a0, a1):
+        m.face(part, mat, [P(xa, r0, a), P(xb, r0, a), P(xb, r1, a), P(xa, r1, a)])
+
+def beam(m, part, mat, p0, p1, w, h):
+    """Barra de seção retangular entre dois pontos (braços de suspensão)."""
+    d = norm(sub(p1, p0))
+    up = (0, 1, 0) if abs(d[1]) < 0.9 else (1, 0, 0)
+    sx = norm(cross(d, up)); sy = norm(cross(sx, d))
+    c = [add(add(p, mul(sx, ox*w/2)), mul(sy, oy*h/2)) for p in (p0, p1) for ox, oy in ((-1,-1),(1,-1),(1,1),(-1,1))]
+    a, b = c[:4], c[4:]
+    for i in range(4):
+        j = (i+1) % 4
+        m.face(part, mat, [a[i], a[j], b[j], b[i]])
+    m.face(part, mat, a[::-1]); m.face(part, mat, b)
+
+def helix(m, part, mat, base, radius, height, turns, wire, seg_per_turn=12):
+    """Mola helicoidal vertical (faixa de quads) com centro em base=(x,y,z)."""
+    n = int(turns*seg_per_turn)
+    pts = []
+    for k in range(n+1):
+        a = 2*math.pi*k/seg_per_turn
+        pts.append((base[0] + radius*math.cos(a), base[1] + height*k/n, base[2] + radius*math.sin(a)))
+    for k in range(n):
+        p, q = pts[k], pts[k+1]
+        o = (0, wire, 0)
+        rp = norm((p[0]-base[0], 0, p[2]-base[2])); rq = norm((q[0]-base[0], 0, q[2]-base[2]))
+        m.face(part, mat, [sub(p, o), sub(q, o), add(q, o), add(p, o)])
+        m.face(part, mat, [add(p, mul(rp, wire)), add(q, mul(rq, wire)), sub(q, mul(rq, wire)), sub(p, mul(rp, wire))])

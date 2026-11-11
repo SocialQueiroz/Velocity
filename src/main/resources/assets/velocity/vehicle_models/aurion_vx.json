@@ -53,6 +53,42 @@
         -1.34
       ],
       "animation": "wheel_spin"
+    },
+    "disc_fl": {
+      "parent": "wheel_fl"
+    },
+    "disc_fr": {
+      "parent": "wheel_fr"
+    },
+    "disc_rl": {
+      "parent": "wheel_rl"
+    },
+    "disc_rr": {
+      "parent": "wheel_rr"
+    },
+    "caliper_fl": {
+      "parent": "steer_fl"
+    },
+    "caliper_fr": {
+      "parent": "steer_fr"
+    },
+    "knuckle_fl": {
+      "parent": "steer_fl"
+    },
+    "knuckle_fr": {
+      "parent": "steer_fr"
+    },
+    "pad_fl_inner": {
+      "parent": "steer_fl"
+    },
+    "pad_fl_outer": {
+      "parent": "steer_fl"
+    },
+    "pad_fr_inner": {
+      "parent": "steer_fr"
+    },
+    "pad_fr_outer": {
+      "parent": "steer_fr"
     }
   },
   "materials": {

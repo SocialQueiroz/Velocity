@@ -5,6 +5,39 @@ Downloads: pasta [`releases/`](releases/). Instale o jar em `.minecraft/mods` ju
 
 ---
 
+## Velo 0.04 — Freios, suspensão e caixas de roda
+**Jar:** `releases/Velocity-Velo-0.04-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
+
+![Velo 0.04](docs/screenshots/velo-0.04.png)
+
+### Novidades
+- **Freios visíveis através das rodas:** discos ventilados (dianteiros 360 mm, traseiros 340 mm)
+  com furos de ventilação e chapéu central; **pinças amarelas** de 2 corpos com ponte.
+- **Pastilhas de freio como peças separadas** (2 por roda: interna e externa, com placa e
+  material de atrito) — base para a troca de pastilhas da Velo 0.15.
+- **Hierarquia mecânica correta:** discos giram com a roda; pinças, pastilhas e mangas de eixo
+  ficam paradas mas acompanham o esterço das rodas dianteiras.
+- **Suspensão duplo A visível:** braços superior e inferior, manga de eixo, cubo com rolamento,
+  amortecedor e mola helicoidal vermelha em cada roda.
+- **Para-barros** pretos dentro das caixas de roda (não se vê mais o "oco" da carroceria).
+- Aro com barril interno: dá para ver o freio entre os raios sem ver o interior do pneu.
+- O modelo agora tem **37 partes** (~11.500 triângulos).
+
+### Ferramentas de desenvolvimento
+- Teste visual: carro sobre plataforma, câmera em modo espectador (sem gravidade), closes
+  de freio dianteiro e traseiro.
+
+### Testado
+- Teste visual dentro do jogo: closes das rodas mostram disco, furos e pinça na posição correta
+  (atrás do eixo); carroceria e luzes inalteradas.
+
+### Limitações conhecidas
+- A suspensão é visual: ainda não comprime (física de suspensão na Velo 0.08).
+- Parte de baixo ainda sem cárter, escapamento e câmbio modelados.
+- Ainda sem interior (Velo 0.05).
+
+---
+
 ## Velo 0.03 — Aurion VX: carroceria definitiva
 **Jar:** `releases/Velocity-Velo-0.03-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
 

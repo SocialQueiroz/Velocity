@@ -6,7 +6,7 @@ Uso (na raiz do repositório): python3 art/tools/gen_aurion_vx.py
 """
 import json, math, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
-from meshlib import Atlas, Mesh, Loft, box, cylinder, smoothstep, gauss, mix
+from meshlib import Atlas, Mesh, Loft, box, cylinder, smoothstep, gauss, mix, annulus_sector, beam, helix
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 ASSETS = os.path.join(ROOT, "src/main/resources/assets/velocity")
@@ -32,6 +32,14 @@ atlas = Atlas({
     "chrome":    (210, 213, 218, 255),
     "plate":     (232, 232, 226, 255),
     "mirror":    (150, 170, 190, 255),
+    "rotor":     (120, 122, 126, 255),     # disco de freio (ferro fundido usinado)
+    "rotor_hat": (70, 72, 76, 255),
+    "caliper":   (226, 168, 24, 255),      # pinça amarela (assinatura Aurion)
+    "pad":       (92, 80, 70, 255),        # material de atrito
+    "pad_plate": (60, 62, 66, 255),
+    "steel":     (88, 92, 98, 255),
+    "spring":    (200, 40, 40, 255),
+    "liner":     (14, 14, 15, 255),
 })
 
 # ---------------------------------------------------------------- perfis (funções de z)
@@ -199,12 +207,78 @@ def build():
     # ------ assoalho / banheira (visível pelas caixas de roda)
     box(m, "underbody", "underbody", -0.58, 0.14, -2.0, 0.58, 0.64, 2.0)
 
+    # ------ caixas de roda (para-barro), freios e suspensão
+    for corner, (x, z, side) in {"fl": (TRACK_F, FRONT_AXLE, 1), "fr": (-TRACK_F, FRONT_AXLE, -1),
+                                 "rl": (TRACK_R, REAR_AXLE, 1), "rr": (-TRACK_R, REAR_AXLE, -1)}.items():
+        front = corner[0] == "f"
+        hw = half_width(z)
+        # para-barro: meia-cúpula interna da caixa de roda
+        annulus_sector(m, "liners", "liner", True, WHEEL_R, z, ARCH_R - 0.005, ARCH_R + 0.01,
+                       -math.pi / 2 - 0.15, math.pi / 2 + 0.15, side * 0.50, side * (hw * 0.97), seg=14)
+        brakes(m, corner, x, z, side, front)
+        suspension(m, corner, x, z, side, front)
+
     # ------ rodas
     wheels = {"wheel_fl": (TRACK_F, FRONT_AXLE, 1, 0.245, 0.241), "wheel_fr": (-TRACK_F, FRONT_AXLE, -1, 0.245, 0.241),
               "wheel_rl": (TRACK_R, REAR_AXLE, 1, 0.285, 0.254), "wheel_rr": (-TRACK_R, REAR_AXLE, -1, 0.285, 0.254)}
     for name, (x, z, side, w, rim_r) in wheels.items():
         wheel(m, name, x, WHEEL_R, z, side, w, rim_r)
     return m
+
+DISC_X_IN = 0.085   # deslocamento do disco para dentro do centro do pneu
+
+def brakes(m, corner, cx, cz, outward, front):
+    """Disco (gira com a roda), pinça fixa na manga (esterça), 2 pastilhas removíveis por roda."""
+    r_disc = 0.180 if front else 0.170
+    thick = 0.032 if front else 0.026
+    xd = cx - outward * DISC_X_IN
+    cy = WHEEL_R
+    # disco ventilado: duas pistas + aletas internas visíveis pela borda, chapéu central
+    cylinder(m, f"disc_{corner}", "rotor", "x", (xd, cy, cz), r_disc, thick, seg=28, cap_mat="rotor", hollow=0.105)
+    cylinder(m, f"disc_{corner}", "rotor_hat", "x", (xd + outward * 0.02, cy, cz), 0.105, 0.045, seg=16, cap_mat="rotor_hat")
+    for k in range(12):  # furos de ventilação (marcas escuras nas duas faces)
+        a = 2 * math.pi * k / 12
+        r = 0.140
+        for face in (1, -1):
+            x = xd + face * (thick / 2 + 0.001)
+            y0, z0 = cy + r * math.cos(a), cz + r * math.sin(a)
+            q = [(x, y0 - 0.008, z0 - 0.008), (x, y0 - 0.008, z0 + 0.008), (x, y0 + 0.008, z0 + 0.008), (x, y0 + 0.008, z0 - 0.008)]
+            m.face(f"disc_{corner}", "trim", q if face * outward > 0 else q[::-1])
+    # pinça: abraça o disco atrás do eixo, em cima (ângulo medido de +Y para +Z)
+    a0, a1 = -math.pi * 0.62, -math.pi * 0.18
+    span = 0.105 if front else 0.085
+    part = f"caliper_{corner}"
+    annulus_sector(m, part, "caliper", True, cy, cz, r_disc - 0.045, r_disc + 0.022, a0, a1,
+                   xd - outward * (thick / 2 + 0.035), xd - outward * (thick / 2 + 0.002), seg=6)   # corpo interno
+    annulus_sector(m, part, "caliper", True, cy, cz, r_disc - 0.045, r_disc + 0.022, a0, a1,
+                   xd + outward * (thick / 2 + 0.002), xd + outward * (thick / 2 + 0.030), seg=6)   # corpo externo
+    annulus_sector(m, part, "caliper", True, cy, cz, r_disc + 0.004, r_disc + 0.022, a0, a1,
+                   xd - outward * (thick / 2 + 0.035), xd + outward * (thick / 2 + 0.030), seg=6)   # ponte
+    # pastilhas (placa + material de atrito), uma de cada lado do disco
+    for side_name, sgn in (("inner", -1), ("outer", 1)):
+        p = f"pad_{corner}_{side_name}"
+        xf = xd + sgn * outward * (thick / 2 + 0.0005)
+        annulus_sector(m, p, "pad", True, cy, cz, r_disc - 0.040, r_disc - 0.004, a0 + 0.08, a1 - 0.08,
+                       xf, xf + sgn * outward * 0.010, seg=5)
+        annulus_sector(m, p, "pad_plate", True, cy, cz, r_disc - 0.042, r_disc - 0.002, a0 + 0.06, a1 - 0.06,
+                       xf + sgn * outward * 0.010, xf + sgn * outward * 0.016, seg=5)
+
+def suspension(m, corner, cx, cz, outward, front):
+    """Duplo A (braços superior e inferior), manga de eixo, cubo e conjunto mola/amortecedor."""
+    cy = WHEEL_R
+    k = f"knuckle_{corner}"
+    x_hub = cx - outward * 0.14
+    cylinder(m, k, "steel", "x", (x_hub, cy, cz), 0.055, 0.07, seg=12)               # cubo/rolamento
+    box(m, k, "steel", x_hub - 0.025, cy - 0.17, cz - 0.03, x_hub + 0.025, cy + 0.17, cz + 0.03)   # manga
+    s = f"suspension_{corner}"
+    x_in = outward * 0.50
+    for y_out, y_in, w in ((cy - 0.15, 0.20, 0.035), (cy + 0.15, 0.52, 0.03)):
+        for dz in (-0.16, 0.16):
+            beam(m, s, "steel", (x_hub, y_out, cz), (x_in, y_in, cz + dz), w, w)
+    base = (cx - outward * 0.26, cy - 0.12, cz - (0.05 if front else -0.05))
+    # amortecedor (tubo) + mola helicoidal
+    box(m, s, "steel", base[0] - 0.022, base[1], base[2] - 0.022, base[0] + 0.022, base[1] + 0.42, base[2] + 0.022)
+    helix(m, s, "spring", (base[0], base[1] + 0.12, base[2]), 0.055, 0.24, 5, 0.008)
 
 def wheel(m, part, cx, cy, cz, outward, tire_w, rim_r, seg=32):
     xi, xo = cx - outward * tire_w / 2, cx + outward * tire_w / 2
@@ -226,7 +300,7 @@ def wheel(m, part, cx, cy, cz, outward, tire_w, rim_r, seg=32):
             m.face(part, "tire", q1); m.face(part, "tire", q2)
         xr = xo - outward * 0.06
         m.face(part, "rim", flip([P(xo, rim_r, b), P(xr, rim_r * 0.95, b), P(xr, rim_r * 0.95, a), P(xo, rim_r, a)]))
-        m.face(part, "trim", flip([(xr, cy, cz), P(xr, rim_r * 0.95, a), P(xr, rim_r * 0.95, b)]))
+        m.face(part, "rotor_hat", flip([P(xr, rim_r * 0.95, b), P(xi, rim_r * 0.95, b), P(xi, rim_r * 0.95, a), P(xr, rim_r * 0.95, a)]))
     # 5 raios duplos
     xr = xo - outward * 0.06
     x_out = xo - outward * 0.010
@@ -267,6 +341,10 @@ def main():
             "wheel_fr": {"parent": "steer_fr", "pivot": piv(-TRACK_F, FRONT_AXLE), "animation": "wheel_spin"},
             "wheel_rl": {"pivot": piv(TRACK_R, REAR_AXLE), "animation": "wheel_spin"},
             "wheel_rr": {"pivot": piv(-TRACK_R, REAR_AXLE), "animation": "wheel_spin"},
+            # discos giram com a roda; pinças, pastilhas e mangas acompanham o esterço (dianteiras)
+            **{f"disc_{c}": {"parent": f"wheel_{c}"} for c in ("fl", "fr", "rl", "rr")},
+            **{f"{p}_{c}": {"parent": f"steer_{c}"} for p in ("caliper", "knuckle") for c in ("fl", "fr")},
+            **{f"pad_{c}_{s}": {"parent": f"steer_{c}"} for c in ("fl", "fr") for s in ("inner", "outer")},
         },
         "materials": {
             "paint": {"role": "paint"},
