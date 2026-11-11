@@ -1,0 +1,23 @@
+{
+  "display_name": "Aurion VX (protótipo)",
+  "manufacturer": "Aurion Motorworks",
+  "category": "sports",
+  "seats": 2,
+  "dimensions": { "length": 4.40, "width": 1.92, "height": 1.24, "wheelbase": 2.62, "wheel_radius": 0.34 },
+  "engine": {
+    "layout": "V6_TWIN_TURBO_FRONT_MID",
+    "idle_rpm": 850, "peak_torque_nm": 520, "peak_torque_rpm": 3200,
+    "peak_power_rpm": 6600, "redline_rpm": 7800, "engine_brake_nm": 60
+  },
+  "transmission": {
+    "gear_ratios": [3.36, 2.10, 1.49, 1.16, 0.94, 0.79],
+    "reverse_ratio": 3.10, "final_drive": 3.70, "efficiency": 0.88,
+    "upshift_rpm": 7100, "downshift_rpm": 3000
+  },
+  "chassis": {
+    "mass_kg": 1480, "drag_coefficient": 0.31, "frontal_area_m2": 2.0,
+    "rolling_resistance": 0.013, "tire_grip": 1.05, "max_brake_force_n": 16500,
+    "max_steer_deg": 32, "steer_speed_falloff": 0.06
+  },
+  "fuel": { "capacity_liters": 62, "consumption_l_per_kwh": 0.27 }
+}

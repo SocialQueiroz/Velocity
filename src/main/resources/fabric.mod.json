@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "velocity",
+  "version": "${version}",
+  "name": "VELOCITY — Ultimate Vehicle Mod",
+  "description": "Veículos detalhados com física, mecânica e oficina. Fase 1: fundação.",
+  "authors": ["SocialQueiroz"],
+  "license": "All-Rights-Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["dev.velocity.core.VelocityMod"],
+    "client": ["dev.velocity.client.VelocityClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
