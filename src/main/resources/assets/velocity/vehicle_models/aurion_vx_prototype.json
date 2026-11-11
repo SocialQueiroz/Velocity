@@ -1,0 +1,78 @@
+{
+  "_comment": "PROTÓTIPO v2 (Velo 0.02). Gerado por art/tools/gen_prototype_mesh.py — não editar à mão.",
+  "mesh": "velocity:vehicle_models/aurion_vx_prototype.obj",
+  "texture": "velocity:textures/vehicle/aurion_vx_prototype.png",
+  "default_paint": "#B3181F",
+  "parts": {
+    "steer_fl": {
+      "parent": "root",
+      "pivot": [
+        0.8,
+        0.34,
+        1.28
+      ],
+      "animation": "steer"
+    },
+    "steer_fr": {
+      "parent": "root",
+      "pivot": [
+        -0.8,
+        0.34,
+        1.28
+      ],
+      "animation": "steer"
+    },
+    "wheel_fl": {
+      "parent": "steer_fl",
+      "pivot": [
+        0.8,
+        0.34,
+        1.28
+      ],
+      "animation": "wheel_spin"
+    },
+    "wheel_fr": {
+      "parent": "steer_fr",
+      "pivot": [
+        -0.8,
+        0.34,
+        1.28
+      ],
+      "animation": "wheel_spin"
+    },
+    "wheel_rl": {
+      "parent": "root",
+      "pivot": [
+        0.8,
+        0.34,
+        -1.34
+      ],
+      "animation": "wheel_spin"
+    },
+    "wheel_rr": {
+      "parent": "root",
+      "pivot": [
+        -0.8,
+        0.34,
+        -1.34
+      ],
+      "animation": "wheel_spin"
+    }
+  },
+  "materials": {
+    "paint": {
+      "role": "paint"
+    },
+    "glass": {
+      "role": "translucent"
+    },
+    "headlight": {
+      "role": "emissive",
+      "light": "headlights"
+    },
+    "taillight": {
+      "role": "emissive",
+      "light": "tail"
+    }
+  }
+}

@@ -5,6 +5,43 @@ Downloads: pasta [`releases/`](releases/). Instale o jar em `.minecraft/mods` ju
 
 ---
 
+## Velo 0.02 — Modelos 3D de verdade
+**Jar:** `releases/Velocity-Velo-0.02-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
+
+![Velo 0.02](docs/screenshots/velo-0.02.png)
+
+### Novidades
+- **Carregador de malhas 3D (OBJ):** veículos agora são desenhados com polígonos de verdade,
+  não com cubos. Isso libera carrocerias curvas, rodas com raios, interiores etc.
+- Partes com **pivôs e hierarquia** definidos em JSON (`assets/<mod>/vehicle_models/<id>.json`):
+  rodas giram em torno do próprio eixo e as dianteiras esterçam em torno do pivô de direção.
+- **Materiais por papel:** pintura (cor aplicada em tempo real — base para a pintura customizada),
+  vidro translúcido, emissivo (faróis e lanternas acendem) e opaco.
+- **Novo visual do protótipo Aurion VX** (~4.000 triângulos): carroceria esculpida por seções,
+  caixas de roda recortadas, cabine com para-brisa inclinado, rodas com 5 raios duplos,
+  pneus com banda e ombro, retrovisores, grade, difusor e 2 saídas de escape.
+- Recarregar resource packs (**F3+T**) recarrega os modelos; um modelo com erro aparece no log
+  e o veículo usa o modelo antigo de cubos em vez de sumir.
+
+### Correções
+- Luz de freio não acendia ao pisar no freio com o carro parado e motor desligado
+  (o carro engatava ré). Agora a ré só engata com o motor ligado.
+
+### Testado
+- 9 testes automáticos da física passam.
+- **Primeiro teste visual dentro do jogo:** o Minecraft foi aberto (renderização por software),
+  o carro foi colocado num mundo e fotografado de 9 ângulos, de dia e de noite.
+  Confirmado: modelo aparece, rodas no lugar, faróis e luz de freio acendem,
+  e esterçar para a direita vira o carro para a direita.
+
+### Limitações conhecidas
+- Ainda é um **protótipo**: o desenho definitivo do Aurion VX vem na Velo 0.03.
+- Sem interior (a cabine é fechada) e sem discos/pinças de freio visíveis (Velo 0.04/0.05).
+- Cores sólidas por material, sem texturas detalhadas ainda.
+- Sons temporários; atraso de controle em servidores; sem suspensão (inalterados).
+
+---
+
 ## Velo 0.01 — Fundação
 **Jar:** `releases/Velocity-Velo-0.01-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
 

@@ -57,6 +57,8 @@ public class VehicleEntity extends Entity {
     private VehicleInput input = VehicleInput.NONE;
     private int ticksSinceInput = Integer.MAX_VALUE / 2;
     private boolean fuelInitialised;
+    /** Somente testes automatizados: aceita entrada sem motorista. Não é salvo nem sincronizado. */
+    public boolean acceptInputWithoutDriver;
 
     // Somente cliente: rotação acumulada das rodas (rad) para animação.
     public float wheelSpin;
@@ -180,8 +182,9 @@ public class VehicleEntity extends Entity {
         }
 
         ticksSinceInput++;
-        VehicleInput in = (getDriver() != null && ticksSinceInput <= INPUT_TIMEOUT_TICKS) ? input : VehicleInput.NONE;
-        if (getDriver() == null) state.engineOn = false; // desliga ao sair (TODO: opção "deixar ligado")
+        boolean controlled = getDriver() != null || acceptInputWithoutDriver;
+        VehicleInput in = (controlled && ticksSinceInput <= INPUT_TIMEOUT_TICKS) ? input : VehicleInput.NONE;
+        if (!controlled) state.engineOn = false; // desliga ao sair (TODO: opção "deixar ligado")
 
         BlockPos below = BlockPos.ofFloored(getX(), getY() - 0.2, getZ());
         float grip = isOnGround() ? SurfaceGrip.of(getWorld().getBlockState(below)) : 0f;
@@ -209,7 +212,7 @@ public class VehicleEntity extends Entity {
         dataTracker.set(STEER, state.steerDeg);
         dataTracker.set(FUEL, state.fuelLiters);
         dataTracker.set(ENGINE_ON, state.engineOn);
-        dataTracker.set(BRAKING, in.brake() > 0.05f && state.gear >= 0 || in.handbrake());
+        dataTracker.set(BRAKING, state.braking);
     }
 
     private void applyGravityAndMove(Vec3d horizontal) {

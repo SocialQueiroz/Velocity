@@ -39,13 +39,14 @@ public final class VehiclePhysics {
         if (!hasFuel) state.engineOn = false;
 
         // --- Seleção de marcha: freio parado engata ré; acelerador parado engata 1ª.
-        if (Math.abs(v) < 0.3f) {
+        if (running && Math.abs(v) < 0.3f) {
             if (in.brake() > 0.1f && in.throttle() < 0.05f && state.gear >= 0) state.gear = -1;
             else if (in.throttle() > 0.1f && state.gear <= 0) state.gear = 1;
         }
         // Em ré, "freio" funciona como acelerador para trás e "acelerador" como freio.
         float drive = state.gear < 0 ? in.brake() : in.throttle();
         float brake = state.gear < 0 ? in.throttle() : in.brake();
+        state.braking = brake > 0.05f || in.handbrake();
 
         // --- RPM a partir da velocidade das rodas.
         float ratio = tr.ratio(state.gear) * tr.finalDrive();

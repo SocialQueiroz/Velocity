@@ -22,6 +22,6 @@ public final class VelocityMod implements ModInitializer {
         VelocityRegistries.init();
         VelocityNetwork.init();
         ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new VehicleDefinitions());
-        LOGGER.info("VELOCITY inicializado (Fase 1 — fundação).");
+        LOGGER.info("VELOCITY inicializado.");
     }
 }

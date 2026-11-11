@@ -76,6 +76,14 @@ class VehiclePhysicsTest {
     }
 
     @Test
+    void brakePedalWithEngineOffLightsBrakeAndDoesNotEngageReverse() {
+        state.engineOn = false;
+        physics.step(def, new VehicleInput(0, 1, 0, false), DT, 1f, 0f);
+        assertTrue(state.braking);
+        assertEquals(0, state.gear);
+    }
+
+    @Test
     void engineOffProducesNoThrust() {
         state.engineOn = false;
         assertEquals(0f, run(new VehicleInput(1, 0, 0, false), 3, 1f), 1e-4);

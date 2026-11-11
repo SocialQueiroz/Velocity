@@ -1,10 +1,11 @@
 package dev.velocity.client.render;
 
+import dev.velocity.client.model.BakedVehicleModel;
+import dev.velocity.client.model.VehicleMeshRenderer;
+import dev.velocity.client.model.VehicleModelManager;
 import dev.velocity.core.VelocityMod;
 import dev.velocity.vehicle.VehicleEntity;
-import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderer;
@@ -13,13 +14,18 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
 
+/**
+ * Renderiza o veículo pela malha 3D do id da definição (assets/&lt;ns&gt;/vehicle_models/&lt;id&gt;.json).
+ * Se a malha não existir/estiver inválida, usa o modelo de cubos de fallback para o veículo
+ * continuar visível e o problema aparecer no log.
+ */
 public class VehicleEntityRenderer extends EntityRenderer<VehicleEntity> {
-    private static final Identifier TEXTURE = VelocityMod.id("textures/entity/prototype_car.png");
-    private final PrototypeCarModel model;
+    private static final Identifier FALLBACK_TEXTURE = VelocityMod.id("textures/entity/prototype_car.png");
+    private final PrototypeCarModel fallback;
 
     public VehicleEntityRenderer(EntityRendererFactory.Context ctx) {
         super(ctx);
-        this.model = new PrototypeCarModel(ctx.getPart(PrototypeCarModel.LAYER));
+        this.fallback = new PrototypeCarModel(ctx.getPart(PrototypeCarModel.LAYER));
         this.shadowRadius = 1.4f;
     }
 
@@ -28,31 +34,33 @@ public class VehicleEntityRenderer extends EntityRenderer<VehicleEntity> {
                        VertexConsumerProvider consumers, int light) {
         matrices.push();
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-yaw));
-        matrices.scale(-1f, -1f, 1f);
-        matrices.translate(0f, -1.501f, 0f);
 
-        model.animate(entity, tickDelta);
-        VertexConsumer vc = consumers.getBuffer(model.getLayer(TEXTURE));
-        model.render(matrices, vc, light, OverlayTexture.DEFAULT_UV, 0xFFFFFFFF);
-
-        // Passe emissivo: faróis e luzes de freio com iluminação máxima.
-        VertexConsumer emissive = consumers.getBuffer(RenderLayer.getEntityCutoutNoCull(TEXTURE));
-        int full = LightmapTextureManager.MAX_LIGHT_COORDINATE;
-        model.headlights.visible = true;
-        model.headlights.render(matrices, emissive, entity.areLightsOn() ? full : light, OverlayTexture.DEFAULT_UV);
-        model.headlights.visible = false;
-        boolean tailOn = entity.isBraking() || entity.areLightsOn();
-        int tailColor = entity.isBraking() ? 0xFFFFFFFF : 0xFF993333; // posição = mais escura; freio = cheia
-        model.taillights.visible = true;
-        model.taillights.render(matrices, emissive, tailOn ? full : light, OverlayTexture.DEFAULT_UV, tailOn ? tailColor : 0xFF552222);
-        model.taillights.visible = false;
-
+        Identifier modelId = Identifier.tryParse(entity.getDefinitionId());
+        BakedVehicleModel model = modelId != null ? VehicleModelManager.get(modelId) : null;
+        if (model != null) {
+            float spin = entity.prevWheelSpin + (entity.wheelSpin - entity.prevWheelSpin) * tickDelta;
+            var pose = new VehicleMeshRenderer.Pose(spin, (float) Math.toRadians(entity.getSteerDeg()),
+                    model.defaultPaint(), entity.areLightsOn(), entity.isBraking());
+            VehicleMeshRenderer.render(model, pose, matrices, consumers, light);
+        } else {
+            renderFallback(entity, tickDelta, matrices, consumers, light);
+        }
         matrices.pop();
         super.render(entity, yaw, tickDelta, matrices, consumers, light);
     }
 
+    private void renderFallback(VehicleEntity entity, float tickDelta, MatrixStack matrices, VertexConsumerProvider consumers, int light) {
+        matrices.push();
+        matrices.scale(-1f, -1f, 1f);
+        matrices.translate(0f, -1.501f, 0f);
+        fallback.animate(entity, tickDelta);
+        VertexConsumer vc = consumers.getBuffer(fallback.getLayer(FALLBACK_TEXTURE));
+        fallback.render(matrices, vc, light, OverlayTexture.DEFAULT_UV, 0xFFFFFFFF);
+        matrices.pop();
+    }
+
     @Override
     public Identifier getTexture(VehicleEntity entity) {
-        return TEXTURE;
+        return FALLBACK_TEXTURE;
     }
 }

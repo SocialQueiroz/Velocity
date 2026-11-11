@@ -9,5 +9,6 @@ public final class VehicleState {
     public float yawRateDeg;  // graus/s
     public float fuelLiters;
     public boolean engineOn;
+    public boolean braking;   // pedal de freio efetivo (para a luz de freio)
     public double odometerM;
 }

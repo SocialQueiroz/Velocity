@@ -10,6 +10,16 @@ base { archivesName = project.archives_base_name }
 
 loom {
     splitEnvironmentSourceSets()
+    runs {
+        // Teste visual automatizado: ./gradlew runVisualTest  (ver art/tools/visual_test.sh)
+        visualTest {
+            client()
+            name "Visual Test"
+            runDir "run"
+            property "velocity.visualtest", "true"
+            programArgs "--quickPlaySingleplayer", "vt", "--width", "1280", "--height", "720"
+        }
+    }
     mods {
         "velocity" {
             sourceSet sourceSets.main
