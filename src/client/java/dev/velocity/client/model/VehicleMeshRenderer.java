@@ -51,7 +51,8 @@ public final class VehicleMeshRenderer {
             switch (b.role()) {
                 case PAINT -> color = pose.paintArgb();
                 case EMISSIVE -> {
-                    boolean on = "headlights".equals(b.lightChannel()) ? pose.headlights()
+                    boolean on = "always".equals(b.lightChannel()) ? true
+                            : "headlights".equals(b.lightChannel()) ? pose.headlights()
                             : "brake".equals(b.lightChannel()) ? pose.brake()
                             : "tail".equals(b.lightChannel()) ? (pose.brake() || pose.headlights())
                             : false;

@@ -19,9 +19,9 @@ class VehiclePhysicsTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        try (var in = getClass().getResourceAsStream("/data/velocity/velocity_vehicles/aurion_vx_prototype.json")) {
+        try (var in = getClass().getResourceAsStream("/data/velocity/velocity_vehicles/aurion_vx.json")) {
             JsonObject json = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
-            def = VehicleDefinition.fromJson("velocity:aurion_vx_prototype", json);
+            def = VehicleDefinition.fromJson("velocity:aurion_vx", json);
         }
         state = new VehicleState();
         state.engineOn = true;

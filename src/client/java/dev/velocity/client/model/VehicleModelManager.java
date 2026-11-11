@@ -17,7 +17,7 @@ import java.util.Map;
 /**
  * Carrega todos os assets/&lt;ns&gt;/vehicle_models/*.json a cada recarga de resource pack (F3+T).
  * Um modelo inválido é registrado no log e ignorado; o renderer usa o modelo de fallback.
- * O id do modelo é igual ao id da definição do veículo (ex.: velocity:aurion_vx_prototype).
+ * O id do modelo é igual ao id da definição do veículo (ex.: velocity:aurion_vx).
  */
 public final class VehicleModelManager implements SimpleSynchronousResourceReloadListener, IdentifiableResourceReloadListener {
     public static final String FOLDER = "vehicle_models";

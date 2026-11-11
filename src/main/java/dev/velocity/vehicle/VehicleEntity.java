@@ -47,7 +47,9 @@ public class VehicleEntity extends Entity {
     private static final TrackedData<Boolean> BRAKING = DataTracker.registerData(VehicleEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Float> HEALTH = DataTracker.registerData(VehicleEntity.class, TrackedDataHandlerRegistry.FLOAT);
 
-    public static final String DEFAULT_DEFINITION = "velocity:aurion_vx_prototype";
+    public static final String DEFAULT_DEFINITION = "velocity:aurion_vx";
+    /** Ids renomeados entre versões: id antigo → id atual (mantém veículos de saves antigos). */
+    private static final java.util.Map<String, String> LEGACY_IDS = java.util.Map.of("velocity:aurion_vx_prototype", "velocity:aurion_vx");
     private static final int INPUT_TIMEOUT_TICKS = 10;
     private static final float TICK_DT = 0.05f;
     private static final float GRAVITY_PER_TICK = 0.08f;
@@ -266,7 +268,10 @@ public class VehicleEntity extends Entity {
 
     @Override
     protected void readCustomDataFromNbt(NbtCompound nbt) {
-        if (nbt.contains("Definition")) setDefinitionId(nbt.getString("Definition"));
+        if (nbt.contains("Definition")) {
+            String id = nbt.getString("Definition");
+            setDefinitionId(LEGACY_IDS.getOrDefault(id, id));
+        }
         state.fuelLiters = nbt.getFloat("Fuel");
         state.odometerM = nbt.getDouble("Odometer");
         dataTracker.set(HEALTH, nbt.contains("Health") ? nbt.getFloat("Health") : 100f);

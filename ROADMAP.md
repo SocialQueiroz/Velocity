@@ -8,8 +8,8 @@ o que não pôde ser testado aparece nas notas em [`PATCH_NOTES.md`](PATCH_NOTES
 |---|---|---|
 | **Velo 0.01** | Fundação: projeto Fabric, entidade de veículo, física básica, controles, HUD mínima, modelo provisório | ✅ |
 | **Velo 0.02** | Carregador de malhas 3D (OBJ → malha por parte/material), teste visual automatizado | ✅ |
-| Velo 0.03 | Aurion VX — carroceria externa (casca, capô, portas, para-choques, faróis, lanternas, vidros) | ⏳ próxima |
-| Velo 0.04 | Aurion VX — rodas com raios, pneus, discos, pinças, cubos; esterçamento correto | |
+| **Velo 0.03** | Aurion VX — carroceria externa (casca, capô, portas, para-choques, faróis, lanternas, vidros) | ✅ |
+| Velo 0.04 | Aurion VX — freios visíveis (discos, pinças), cubos, suspensão visível, caixas de roda | ⏳ próxima |
 | Velo 0.05 | Aurion VX — interior (painel, volante animado, bancos, console, pedais) + câmera interna | |
 | Velo 0.06 | Animações: portas, capô, porta-malas, setas, pisca-alerta, ré, spoiler ativo | |
 | Velo 0.07 | Áudio de motor em camadas por RPM/carga, partida, desligamento, buzina própria | |

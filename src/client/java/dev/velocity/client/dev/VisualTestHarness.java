@@ -85,6 +85,8 @@ public final class VisualTestHarness {
                 ServerWorld w = s.getOverworld();
                 w.setTimeOfDay(6000);
                 s.getGameRules().get(net.minecraft.world.GameRules.DO_DAYLIGHT_CYCLE).set(false, s);
+                // remove veículos de execuções anteriores
+                for (VehicleEntity old : w.getEntitiesByType(VelocityRegistries.VEHICLE, e -> true)) old.discard();
                 vehicle = VelocityRegistries.VEHICLE.create(w);
                 vehicle.refreshPositionAndAngles(CAR.x, CAR.y, CAR.z, 0f, 0f);
                 vehicle.fillTank();

@@ -20,7 +20,7 @@ public final class VelocityRegistries {
                     .trackingTickInterval(1)       // replicação a cada tick para movimento suave
                     .build("vehicle"));
 
-    public static final Item VEHICLE_SPAWNER = Registry.register(Registries.ITEM, VelocityMod.id("aurion_vx_prototype"),
+    public static final Item VEHICLE_SPAWNER = Registry.register(Registries.ITEM, VelocityMod.id("aurion_vx"),
             new VehicleSpawnerItem(new Item.Settings().maxCount(1), VehicleEntity.DEFAULT_DEFINITION));
 
     public static void init() {

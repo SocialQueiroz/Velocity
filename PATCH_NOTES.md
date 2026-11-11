@@ -5,6 +5,49 @@ Downloads: pasta [`releases/`](releases/). Instale o jar em `.minecraft/mods` ju
 
 ---
 
+## Velo 0.03 — Aurion VX: carroceria definitiva
+**Jar:** `releases/Velocity-Velo-0.03-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
+
+![Velo 0.03](docs/screenshots/velo-0.03.png)
+
+### Novidades
+- **O Aurion VX deixa de ser protótipo**: carroceria nova (~7.000 triângulos) feita como uma
+  superfície contínua, com capô longo, cabine recuada e traseira fastback.
+- **Para-lamas musculosos:** dianteiros com pico acima da roda, "ombros" traseiros mais largos
+  e cintura afinada nas portas.
+- **Frente:** faróis em "L" com luz diurna (DRL) sempre acesa, grade trapezoidal com 3 frisos
+  cromados, entradas de ar laterais, splitter em carbono e emblema.
+- **Lateral:** frisos das portas, maçaneta cromada, entrada de ar atrás da porta (intercooler),
+  saia lateral em carbono, moldura preta das janelas e coluna B escurecida.
+- **Teto:** para-brisa e vidro traseiro inclinados, janelas laterais entre as colunas A e C.
+- **Traseira:** lanterna contínua com assinatura de 3 barras em cada lado, difusor em carbono
+  com 4 aletas, 4 saídas de escape tubulares, placa, emblema e spoiler (parte separada, pronta
+  para virar spoiler ativo na Velo 0.06).
+- Saídas de ar no capô, bocal de combustível e retrovisores com haste, carcaça e espelho.
+- **Rodas novas:** dianteiras 19" (pneu 245) e traseiras 20" (pneu 285), 5 raios duplos,
+  cubo central e 5 porcas por roda.
+- Novo material: carbono, espelho, placa e DRL.
+- `art/tools/meshlib.py`: biblioteca de geometria reutilizável para os próximos veículos.
+
+### Mudanças
+- O item agora se chama **Aurion VX** (`velocity:aurion_vx`). Veículos já colocados no mundo
+  nas versões 0.01/0.02 são convertidos automaticamente. **Itens antigos do inventário
+  (Aurion VX Protótipo) somem** — pegue um novo na aba Ferramentas.
+
+### Testado
+- Teste visual dentro do jogo em 9 ângulos, de dia e de noite (imagem acima).
+- Teste automático: esterçar à direita vira o carro para a direita; 9 testes da física passam.
+
+### Limitações conhecidas
+- Ainda **sem interior** (cabine escura por trás dos vidros) — Velo 0.05.
+- Sem discos e pinças de freio atrás das rodas — Velo 0.04.
+- Parte de baixo ainda é um assoalho simples (o detalhamento vem com a mecânica).
+- Cores sólidas por material, sem texturas finas (pintura metálica, carbono trançado) ainda.
+- O veículo não atende ainda aos critérios de "visualmente completo" (docs/ARCHITECTURE.md §F):
+  faltam interior (item 6), freios visíveis (5), parte inferior (9).
+
+---
+
 ## Velo 0.02 — Modelos 3D de verdade
 **Jar:** `releases/Velocity-Velo-0.02-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
 

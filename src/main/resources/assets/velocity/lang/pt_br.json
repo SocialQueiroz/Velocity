@@ -1,5 +1,5 @@
 {
-  "item.velocity.aurion_vx_prototype": "Aurion VX (Protótipo)",
+  "item.velocity.aurion_vx": "Aurion VX",
   "entity.velocity.vehicle": "Veículo",
   "category.velocity": "VELOCITY — Veículos",
   "key.velocity.engine": "Ligar/desligar motor",

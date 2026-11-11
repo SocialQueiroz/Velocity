@@ -1,1 +1,0 @@
-{ "parent": "minecraft:item/generated", "textures": { "layer0": "velocity:item/aurion_vx_prototype" } }
