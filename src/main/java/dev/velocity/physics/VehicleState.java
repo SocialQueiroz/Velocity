@@ -9,6 +9,8 @@ public final class VehicleState {
     public float yawRateDeg;  // graus/s
     public float fuelLiters;
     public boolean engineOn;
-    public boolean braking;   // pedal de freio efetivo (para a luz de freio)
+    public boolean braking;
+    public float load;        // carga do motor 0..1 (pedal efetivo com motor ligado) — áudio
+    public float tireSlip;    // 0..1, saturação de aderência (longitudinal ou lateral) — áudio/efeitos   // pedal de freio efetivo (para a luz de freio)
     public double odometerM;
 }

@@ -18,7 +18,12 @@ for kv in onboardAccessibility:false pauseOnLostFocus:false tutorialStep:none re
 done
 rm -f run/screenshots/vt_*.png
 export LIBGL_ALWAYS_SOFTWARE=1 MESA_GL_VERSION_OVERRIDE=4.5
+# Áudio sem placa de som: o OpenAL Soft grava a mixagem final num WAV (backend "wave").
+rm -f run/audio_test.wav
+printf '[general]\ndrivers = wave\n[wave]\nfile = %s\n' "$PWD/run/audio_test.wav" > run/alsoft.conf
+export ALSOFT_CONF="$PWD/run/alsoft.conf"
 timeout 540 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runVisualTest --console=plain 2>&1 \
-  | grep -E "VISUALTEST|VELOCITY|ERROR|Exception|Modelo de" | grep -v JAVA_TOOL || true
+  | grep -E "VISUALTEST|AUDIOTEST|VELOCITY|ERROR|Exception|Modelo de" | grep -v JAVA_TOOL || true
 cp run/screenshots/vt_*.png build/visualtest/ 2>/dev/null || true
+cp run/audio_test.wav build/visualtest/ 2>/dev/null || true
 ls build/visualtest

@@ -73,13 +73,15 @@ public final class VehiclePhysics {
             if (drive < 0.05f && Math.abs(v) > 0.5f) // freio-motor
                 fDrive -= Math.signum(v) * en.engineBrakeNm() * Math.abs(ratio) / wheelR;
         }
+        float slipLong = maxTraction > 0 ? Math.abs(fDrive) / maxTraction - 1f : (Math.abs(fDrive) > 0 ? 1f : 0f);
         fDrive = clamp(fDrive, -maxTraction, maxTraction);
 
         float fDrag = 0.5f * AIR_DENSITY * ch.dragCoefficient() * ch.frontalAreaM2() * v * Math.abs(v);
         float fRoll = Math.abs(v) > 0.05f ? Math.signum(v) * ch.rollingResistance() * m * G : 0f;
         float fSlope = m * G * slopeSin;
-        float brakeTotal = Math.min(ch.maxBrakeForceN() * brake + (in.handbrake() ? ch.maxBrakeForceN() * 0.6f : 0f),
-                maxTraction);
+        float brakeWanted = ch.maxBrakeForceN() * brake + (in.handbrake() ? ch.maxBrakeForceN() * 0.6f : 0f);
+        float brakeTotal = Math.min(brakeWanted, maxTraction);
+        float slipBrake = Math.abs(v) > 3f && maxTraction > 0 ? (brakeWanted / maxTraction - 0.9f) * 4f : 0f;
 
         float fNet = fDrive - fDrag - fRoll - fSlope;
         float newV = v + fNet / m * dt;
@@ -94,13 +96,19 @@ public final class VehiclePhysics {
         float steerTarget = in.steer() * ch.maxSteerDeg() / (1f + Math.abs(newV) * ch.steerSpeedFalloff());
         state.steerDeg += (steerTarget - state.steerDeg) * Math.min(1f, dt * 8f);
         float yawRate = 0f;
+        float slipLat = 0f;
         if (Math.abs(newV) > 0.05f) {
             yawRate = newV / def.dimensions().wheelbase() * (float) Math.tan(Math.toRadians(state.steerDeg));
             float maxYaw = maxTraction / m / Math.max(1f, Math.abs(newV));
             if (in.handbrake()) maxYaw *= 1.6f; // eixo traseiro travado facilita rotação
+            slipLat = Math.abs(yawRate) > maxYaw * 0.85f ? (Math.abs(yawRate) / maxYaw - 0.85f) * 3f : 0f;
             yawRate = clamp(yawRate, -maxYaw, maxYaw);
         }
         state.yawRateDeg = (float) Math.toDegrees(yawRate);
+        float slipHand = in.handbrake() && Math.abs(newV) > 4f ? 1f : 0f;
+        float slip = Math.max(Math.max(slipLong * (Math.abs(newV) > 0.5f || drive > 0.5f ? 1f : 0f), slipBrake), Math.max(slipLat, slipHand));
+        state.tireSlip = clamp(slip, 0f, 1f);
+        state.load = running ? drive : 0f;
 
         // --- Combustível: potência entregue (kW) × consumo específico + marcha lenta.
         if (running) {

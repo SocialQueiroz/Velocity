@@ -1,6 +1,6 @@
 # VELOCITY — Arquitetura Técnica (v0.1, Fase 1)
 
-> Versão: Velo 0.06. Estado honesto: este documento descreve o **alvo**. A seção "Status" no fim lista o que existe
+> Versão: Velo 0.07. Estado honesto: este documento descreve o **alvo**. A seção "Status" no fim lista o que existe
 > de fato no código. Nada que esteja marcado como PENDENTE foi implementado.
 
 ## A. Arquitetura técnica
@@ -199,6 +199,6 @@ Um veículo só é **completo** se TODOS os itens passarem:
 | Carregador OBJ + JSON (pivôs, hierarquia, materiais), luzes emissivas | ✅ teste visual automatizado no jogo (Xvfb + Mesa) |
 | HUD mínima | ✅ compila; ⚠️ não capturada no teste visual (HUD oculta) |
 | Modelo 3D do Aurion VX | ⚠️ carroceria, freios/suspensão e interior com volante animado (~13k tri, 39 partes); parte inferior PENDENTE |
-| Sons próprios | ❌ PENDENTE (sons vanilla temporários) |
+| Sons próprios (motor em camadas, portas, buzina, pneus, vento) | ✅ sintetizados; ✅ gravação de áudio no jogo analisada |
 | Inclinação de terreno, suspensão, colisão com dano visual | ❌ PENDENTE (Fase 3) |
 | Motos, garagem, mecânica, pintura | ❌ PENDENTE (Fases 4–6, seção 19) |

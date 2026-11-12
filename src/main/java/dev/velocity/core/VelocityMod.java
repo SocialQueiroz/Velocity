@@ -19,6 +19,7 @@ public final class VelocityMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        VelocitySounds.init();
         VelocityRegistries.init();
         VelocityNetwork.init();
         ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new VehicleDefinitions());

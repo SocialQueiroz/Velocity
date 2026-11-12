@@ -64,7 +64,7 @@ public final class VisualTestHarness {
         steps.add(new Step(t + 60, c -> shot(c, "night_brake")));
         t += 70;
         // esterçamento: liga motor, esterça à direita parado, vista de cima
-        steps.add(new Step(t, c -> server(c, s -> { s.getOverworld().setTimeOfDay(6000); vehicle.handleAction(1); vehicle.handleAction(0); })));
+        steps.add(new Step(t, c -> server(c, s -> { s.getOverworld().setTimeOfDay(6000); vehicle.handleAction(1); vehicle.setEngineOn(true); })));
         for (int i = 0; i < 40; i += 2) steps.add(new Step(t + i, c -> server(c, s -> vehicle.receiveInput(new VehicleInput(0, 0, 1, false)))));
         steps.add(new Step(t + 4, c -> placeCamera(c, 0.92, 1.06, 180, new Vec3d(0.40, 0.95, 0.62))));
         steps.add(new Step(t + 38, c -> shot(c, "cockpit_steer_right")));
@@ -79,12 +79,12 @@ public final class VisualTestHarness {
         t += 70;
         steps.add(new Step(t - 2, c -> server(c, s -> { vehicle.halt(); vehicle.refreshPositionAndAngles(CAR.x, CAR.y, CAR.z, 0f, 0f); })));
         // ré: motor ligado + "freio" parado engata ré → luz de ré; depois volta à posição
-        steps.add(new Step(t, c -> server(c, s -> { s.getOverworld().setTimeOfDay(18000); vehicle.handleAction(0); })));
+        steps.add(new Step(t, c -> server(c, s -> { s.getOverworld().setTimeOfDay(18000); vehicle.setEngineOn(true); })));
         for (int i = 2; i < 12; i += 2) steps.add(new Step(t + i, c -> server(c, s -> vehicle.receiveInput(new VehicleInput(0, 0.05f, 0, false)))));
         steps.add(new Step(t + 3, c -> placeCamera(c, 6, 1.6, 200, DEFAULT_TARGET)));
         steps.add(new Step(t + 12, c -> shot(c, "night_reverse")));
         steps.add(new Step(t + 14, c -> server(c, s -> {
-            vehicle.handleAction(0);
+            vehicle.setEngineOn(false);
             vehicle.halt();
             vehicle.refreshPositionAndAngles(CAR.x, CAR.y, CAR.z, 0f, 0f);
             s.getOverworld().setTimeOfDay(6000);
@@ -133,6 +133,7 @@ public final class VisualTestHarness {
             p.changeGameMode(net.minecraft.world.GameMode.CREATIVE);
             vehicle.setYaw(0f);
             vehicle.refreshPositionAndAngles(CAR.x, CAR.y, CAR.z, 0f, 0f);
+            vehicle.setEngineOn(false);   // estado conhecido antes do teste de áudio
             p.startRiding(vehicle, true);
             p.setYaw(0f); p.setPitch(5f);
         })));
@@ -140,7 +141,37 @@ public final class VisualTestHarness {
         steps.add(new Step(t + 30, c -> shot(c, "ride_first_person")));
         steps.add(new Step(t + 32, c -> c.options.setPerspective(Perspective.THIRD_PERSON_FRONT)));
         steps.add(new Step(t + 50, c -> shot(c, "ride_third_person")));
-        steps.add(new Step(t + 60, MinecraftClient::scheduleStop));
+        t += 60;
+        // ÁUDIO: motorista real, teclas reais. Partida → 7 s acelerando → 2 s soltando → frenagem forte →
+        // buzina → desliga. O OpenAL grava a mixagem em run/audio_test.wav (ver art/tools/visual_test.sh).
+        steps.add(new Step(t, c -> {
+            c.options.setPerspective(Perspective.FIRST_PERSON);
+            server(c, s -> { vehicle.acceptInputWithoutDriver = false; vehicle.halt();
+                vehicle.refreshPositionAndAngles(CAR.x, CAR.y, CAR.z, 0f, 0f); });
+            VelocityMod.LOGGER.info("AUDIOTEST marco partida tick={}", c.world.getTime());
+            server(c, s -> VelocityMod.LOGGER.info("AUDIOTEST servidor: motorista={} passageiros={} veículo do jogador={}",
+                    vehicle.getDriver(), vehicle.getPassengerList(), s.getPlayerManager().getPlayerList().get(0).getVehicle()));
+            net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                    new dev.velocity.network.VehicleActionPayload(dev.velocity.network.VehicleActionPayload.TOGGLE_ENGINE));
+        }));
+        steps.add(new Step(t + 40, c -> { c.options.forwardKey.setPressed(true);
+            VelocityMod.LOGGER.info("AUDIOTEST marco acelera tick={}", c.world.getTime()); }));
+        for (int i = 40; i < 260; i += 10) {
+            steps.add(new Step(t + i, c -> { if (c.player.getVehicle() instanceof VehicleEntity cv)
+                VelocityMod.LOGGER.info("AUDIOTEST tick={} rpm={} marcha={} kmh={} carga={} slip={}", c.world.getTime(),
+                        Math.round(cv.getRpm()), cv.getGear(), Math.round(Math.abs(cv.getSpeed()) * 3.6f), cv.getLoad(), cv.getTireSlip()); }));
+        }
+        steps.add(new Step(t + 180, c -> { c.options.forwardKey.setPressed(false);
+            VelocityMod.LOGGER.info("AUDIOTEST marco solta tick={}", c.world.getTime()); }));
+        steps.add(new Step(t + 220, c -> { c.options.backKey.setPressed(true);
+            VelocityMod.LOGGER.info("AUDIOTEST marco freia tick={}", c.world.getTime()); }));
+        steps.add(new Step(t + 260, c -> { c.options.backKey.setPressed(false);
+            VelocityMod.LOGGER.info("AUDIOTEST marco buzina tick={}", c.world.getTime());
+            net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                    new dev.velocity.network.VehicleActionPayload(dev.velocity.network.VehicleActionPayload.HORN)); }));
+        steps.add(new Step(t + 290, c -> net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
+                new dev.velocity.network.VehicleActionPayload(dev.velocity.network.VehicleActionPayload.TOGGLE_ENGINE))));
+        steps.add(new Step(t + 330, MinecraftClient::scheduleStop));
 
         ClientTickEvents.END_CLIENT_TICK.register(VisualTestHarness::onTick);
     }

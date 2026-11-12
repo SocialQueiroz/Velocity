@@ -1,0 +1,181 @@
+{
+  "engine.v6.idle_on": {
+    "sounds": [
+      {
+        "name": "velocity:engine/v6_idle_on",
+        "stream": false,
+        "attenuation_distance": 48
+      }
+    ],
+    "subtitle": "subtitles.velocity.engine.v6.idle_on"
+  },
+  "engine.v6.low_on": {
+    "sounds": [
+      {
+        "name": "velocity:engine/v6_low_on",
+        "stream": false,
+        "attenuation_distance": 48
+      }
+    ],
+    "subtitle": "subtitles.velocity.engine.v6.low_on"
+  },
+  "engine.v6.low_off": {
+    "sounds": [
+      {
+        "name": "velocity:engine/v6_low_off",
+        "stream": false,
+        "attenuation_distance": 48
+      }
+    ],
+    "subtitle": "subtitles.velocity.engine.v6.low_off"
+  },
+  "engine.v6.mid_on": {
+    "sounds": [
+      {
+        "name": "velocity:engine/v6_mid_on",
+        "stream": false,
+        "attenuation_distance": 48
+      }
+    ],
+    "subtitle": "subtitles.velocity.engine.v6.mid_on"
+  },
+  "engine.v6.mid_off": {
+    "sounds": [
+      {
+        "name": "velocity:engine/v6_mid_off",
+        "stream": false,
+        "attenuation_distance": 48
+      }
+    ],
+    "subtitle": "subtitles.velocity.engine.v6.mid_off"
+  },
+  "engine.v6.high_on": {
+    "sounds": [
+      {
+        "name": "velocity:engine/v6_high_on",
+        "stream": false,
+        "attenuation_distance": 48
+      }
+    ],
+    "subtitle": "subtitles.velocity.engine.v6.high_on"
+  },
+  "engine.v6.high_off": {
+    "sounds": [
+      {
+        "name": "velocity:engine/v6_high_off",
+        "stream": false,
+        "attenuation_distance": 48
+      }
+    ],
+    "subtitle": "subtitles.velocity.engine.v6.high_off"
+  },
+  "engine.v6.start": {
+    "sounds": [
+      {
+        "name": "velocity:engine/v6_start",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.velocity.engine.v6.start"
+  },
+  "engine.v6.stop": {
+    "sounds": [
+      {
+        "name": "velocity:engine/v6_stop",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.velocity.engine.v6.stop"
+  },
+  "vehicle.horn": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/horn",
+        "stream": false,
+        "attenuation_distance": 64
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.horn"
+  },
+  "vehicle.door_open": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/door_open",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.door_open"
+  },
+  "vehicle.door_close": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/door_close",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.door_close"
+  },
+  "vehicle.hood_open": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/hood_open",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.hood_open"
+  },
+  "vehicle.hood_close": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/hood_close",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.hood_close"
+  },
+  "vehicle.turn_tick": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/turn_tick",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.turn_tick"
+  },
+  "vehicle.turn_tock": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/turn_tock",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.turn_tock"
+  },
+  "vehicle.gear_shift": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/gear_shift",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.gear_shift"
+  },
+  "vehicle.tire_squeal": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/tire_squeal",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.tire_squeal"
+  },
+  "vehicle.wind": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/wind",
+        "stream": false
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.wind"
+  }
+}

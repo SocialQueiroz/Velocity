@@ -20,6 +20,7 @@ public final class VelocityClient implements ClientModInitializer {
         EntityRendererRegistry.register(VelocityRegistries.VEHICLE, VehicleEntityRenderer::new);
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new VehicleModelManager());
         VehicleControls.init();
+        dev.velocity.client.audio.VehicleAudioController.init();
         HudRenderCallback.EVENT.register(VehicleHud::render);
         dev.velocity.client.dev.VisualTestHarness.initIfEnabled();
     }

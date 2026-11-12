@@ -5,6 +5,48 @@ Downloads: pasta [`releases/`](releases/). Instale o jar em `.minecraft/mods` ju
 
 ---
 
+## Velo 0.07 — Áudio automotivo
+**Jar:** `releases/Velocity-Velo-0.07-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
+
+🔊 **Ouça:** [`docs/audio/velo-0.07-gravacao-no-jogo.ogg`](docs/audio/velo-0.07-gravacao-no-jogo.ogg) —
+gravação real de dentro do jogo: partida → aceleração com trocas de marcha → soltar o acelerador →
+frenagem forte → buzina → desligar.
+
+### Novidades
+- **Motor V6 com som próprio em camadas:** 4 faixas de RPM (850 / 2.500 / 4.500 / 7.000) ×
+  acelerando/desacelerando = 7 loops misturados em tempo real pelo RPM e pela carga do motor.
+  A afinação acompanha o RPM; ao soltar o acelerador entra o som abafado de desaceleração.
+- **Partida e desligamento:** motor de arranque girando até o motor "pegar" (~1,3 s); as camadas
+  só entram depois da partida.
+- **Sons novos:** buzina de 2 tons, portas (abrir/fechar com trinco), capô/tampa, troca de marcha,
+  relé da seta (tic-tac, só para quem está dentro), **pneus cantando** (arrancada patinando,
+  frenagem forte, curva no limite, freio de mão) e **vento** em alta velocidade (dentro do carro).
+- Som de dentro do carro levemente abafado.
+- Legendas (subtitles) em português e inglês para todos os sons.
+- Física: o simulador agora calcula **carga do motor** e **patinação dos pneus** (usados pelo áudio
+  e, no futuro, por marcas de pneu e desgaste).
+
+### Como os sons foram feitos
+- **100 % sintetizados por código** (`art/tools/gen_sounds.py`): o ronco é gerado a partir da física
+  do V6 (3 explosões por volta, bancadas com escapes diferentes). Nenhuma gravação de terceiros →
+  sem problema de licença. Total: 165 KiB.
+
+### Testado
+- **Gravação de áudio dentro do jogo** (OpenAL gravando a mixagem num arquivo) com o motorista
+  apertando as teclas de verdade. Análise de frequência: marcha lenta em 43 Hz (= 850 rpm), tom
+  subindo na aceleração, **queda na troca 1ª→2ª na razão 0,74 (física: 0,75)**, tom estável na
+  desaceleração (= 6.050 rpm) e buzina em 410 Hz no momento certo.
+- Loops sem salto na emenda (verificado numericamente).
+
+### Limitações conhecidas
+- **Eu não consigo ouvir:** a qualidade sonora foi verificada só por medição. Ouça a gravação e
+  diga o que achou — dá para ajustar timbre, volume e mixagem.
+- Um único perfil de motor (V6); outros motores virão com novos veículos.
+- Som de batida ainda é o do Minecraft (Velo 0.08). Sem efeito Doppler.
+- Até 4 veículos com som ao mesmo tempo (os mais próximos), para não esgotar os canais de áudio.
+
+---
+
 ## Velo 0.06 — Portas, capô, porta-malas e sinalização
 **Jar:** `releases/Velocity-Velo-0.06-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
 

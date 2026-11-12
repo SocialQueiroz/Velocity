@@ -2,6 +2,7 @@ package dev.velocity.vehicle;
 
 import dev.velocity.core.VelocityMod;
 import dev.velocity.core.VelocityRegistries;
+import dev.velocity.core.VelocitySounds;
 import dev.velocity.network.VehicleActionPayload;
 import dev.velocity.physics.SurfaceGrip;
 import dev.velocity.physics.VehicleInput;
@@ -52,6 +53,8 @@ public class VehicleEntity extends Entity {
     /** Bits: portas, capô, porta-malas, setas, pisca-alerta (ver FLAG_*). */
     private static final TrackedData<Integer> FLAGS = DataTracker.registerData(VehicleEntity.class, TrackedDataHandlerRegistry.INTEGER);
     /** Assento de cada ocupante: 2 bits por índice na lista de passageiros (até 4). */
+    private static final TrackedData<Float> LOAD = DataTracker.registerData(VehicleEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    private static final TrackedData<Float> SLIP = DataTracker.registerData(VehicleEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Integer> SEAT_MAP = DataTracker.registerData(VehicleEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public static final int FLAG_DOOR_L = 1, FLAG_DOOR_R = 1 << 1, FLAG_HOOD = 1 << 2, FLAG_TRUNK = 1 << 3,
@@ -113,6 +116,8 @@ public class VehicleEntity extends Entity {
         builder.add(HEALTH, 100f);
         builder.add(FLAGS, 0);
         builder.add(SEAT_MAP, 0);
+        builder.add(LOAD, 0f);
+        builder.add(SLIP, 0f);
     }
 
     // ------------------------------------------------------------------ definição
@@ -242,7 +247,7 @@ public class VehicleEntity extends Entity {
                 int flag = seat % 2 == 0 ? FLAG_DOOR_L : FLAG_DOOR_R;
                 boolean open = hasVehicleFlag(flag);
                 if (!open || player.shouldCancelInteraction()) {
-                    toggle(flag, open ? SoundEvents.BLOCK_IRON_DOOR_CLOSE : SoundEvents.BLOCK_IRON_DOOR_OPEN);
+                    toggle(flag, open ? VelocitySounds.DOOR_CLOSE : VelocitySounds.DOOR_OPEN);
                     doorCloseTimer[seat % 2] = 0;
                     return ActionResult.CONSUME;
                 }
@@ -255,8 +260,8 @@ public class VehicleEntity extends Entity {
                 requestedSeat = -1;
                 return ActionResult.PASS;
             }
-            case "hood" -> { toggle(FLAG_HOOD, SoundEvents.BLOCK_CHEST_OPEN); return ActionResult.CONSUME; }
-            case "trunk" -> { toggle(FLAG_TRUNK, SoundEvents.BLOCK_CHEST_OPEN); return ActionResult.CONSUME; }
+            case "hood" -> { toggle(FLAG_HOOD, hasVehicleFlag(FLAG_HOOD) ? VelocitySounds.HOOD_CLOSE : VelocitySounds.HOOD_OPEN); return ActionResult.CONSUME; }
+            case "trunk" -> { toggle(FLAG_TRUNK, hasVehicleFlag(FLAG_TRUNK) ? VelocitySounds.HOOD_CLOSE : VelocitySounds.HOOD_OPEN); return ActionResult.CONSUME; }
             default -> { return ActionResult.PASS; }
         }
     }
@@ -264,7 +269,7 @@ public class VehicleEntity extends Entity {
     private void toggle(int flag, net.minecraft.sound.SoundEvent sound) {
         boolean now = !hasVehicleFlag(flag);
         setVehicleFlag(flag, now);
-        getWorld().playSound(null, getBlockPos(), sound, SoundCategory.NEUTRAL, 0.7f, 1.3f); // TODO Velo 0.07: sons próprios
+        getWorld().playSound(null, getBlockPos(), sound, SoundCategory.NEUTRAL, 0.8f, 0.95f + random.nextFloat() * 0.1f);
     }
 
     @Override
@@ -300,13 +305,11 @@ public class VehicleEntity extends Entity {
             case VehicleActionPayload.TOGGLE_ENGINE -> {
                 if (!state.engineOn && state.fuelLiters <= 0f) return;
                 state.engineOn = !state.engineOn;
-                getWorld().playSound(null, getBlockPos(),
-                        state.engineOn ? SoundEvents.BLOCK_PISTON_EXTEND : SoundEvents.BLOCK_PISTON_CONTRACT,
-                        SoundCategory.NEUTRAL, 0.6f, 0.6f); // TODO Fase 2: sons próprios de partida/desligamento
+                getWorld().playSound(null, getBlockPos(), state.engineOn ? VelocitySounds.V6_START : VelocitySounds.V6_STOP,
+                        SoundCategory.NEUTRAL, 1.0f, 1.0f);
             }
             case VehicleActionPayload.TOGGLE_LIGHTS -> dataTracker.set(LIGHTS_ON, !dataTracker.get(LIGHTS_ON));
-            case VehicleActionPayload.HORN -> getWorld().playSound(null, getBlockPos(),
-                    SoundEvents.BLOCK_NOTE_BLOCK_DIDGERIDOO.value(), SoundCategory.NEUTRAL, 1.5f, 1.4f); // TODO buzina própria
+            case VehicleActionPayload.HORN -> getWorld().playSound(null, getBlockPos(), VelocitySounds.HORN, SoundCategory.NEUTRAL, 2.0f, 1.0f);
             case VehicleActionPayload.TURN_LEFT -> { setVehicleFlag(FLAG_TURN_L, !hasVehicleFlag(FLAG_TURN_L)); setVehicleFlag(FLAG_TURN_R, false); turnArmed = false; }
             case VehicleActionPayload.TURN_RIGHT -> { setVehicleFlag(FLAG_TURN_R, !hasVehicleFlag(FLAG_TURN_R)); setVehicleFlag(FLAG_TURN_L, false); turnArmed = false; }
             case VehicleActionPayload.HAZARD -> setVehicleFlag(FLAG_HAZARD, !hasVehicleFlag(FLAG_HAZARD));
@@ -335,7 +338,7 @@ public class VehicleEntity extends Entity {
 
         ticksSinceInput++;
         for (int d = 0; d < 2; d++) {
-            if (doorCloseTimer[d] > 0 && --doorCloseTimer[d] == 0) toggle(d == 0 ? FLAG_DOOR_L : FLAG_DOOR_R, SoundEvents.BLOCK_IRON_DOOR_CLOSE);
+            if (doorCloseTimer[d] > 0 && --doorCloseTimer[d] == 0) toggle(d == 0 ? FLAG_DOOR_L : FLAG_DOOR_R, VelocitySounds.DOOR_CLOSE);
         }
         // seta se desliga sozinha quando o volante volta ao centro depois de esterçar para o mesmo lado
         boolean left = hasVehicleFlag(FLAG_TURN_L), right = hasVehicleFlag(FLAG_TURN_R);
@@ -374,6 +377,8 @@ public class VehicleEntity extends Entity {
         dataTracker.set(FUEL, state.fuelLiters);
         dataTracker.set(ENGINE_ON, state.engineOn);
         dataTracker.set(BRAKING, state.braking);
+        dataTracker.set(LOAD, state.load);
+        dataTracker.set(SLIP, state.tireSlip);
     }
 
     private void applyGravityAndMove(Vec3d horizontal) {
@@ -471,6 +476,11 @@ public class VehicleEntity extends Entity {
         nbt.putInt("Flags", getVehicleFlags() & (FLAG_DOOR_L | FLAG_DOOR_R | FLAG_HOOD | FLAG_TRUNK | FLAG_HAZARD));
     }
 
+    /** Liga/desliga o motor de forma explícita (garagem, comandos, testes). Toca o som de partida/parada. */
+    public void setEngineOn(boolean on) {
+        if (state.engineOn != on) handleAction(VehicleActionPayload.TOGGLE_ENGINE);
+    }
+
     /** Para o veículo imediatamente (teletransporte, garagem, reboque, testes): zera velocidade e entrada. */
     public void halt() {
         state.speed = 0f;
@@ -499,4 +509,6 @@ public class VehicleEntity extends Entity {
     public boolean isBraking() { return dataTracker.get(BRAKING); }
     public float getHealth() { return dataTracker.get(HEALTH); }
     public boolean isReversing() { return getGear() < 0; }
+    public float getLoad() { return dataTracker.get(LOAD); }
+    public float getTireSlip() { return dataTracker.get(SLIP); }
 }

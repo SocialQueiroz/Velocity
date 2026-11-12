@@ -1,6 +1,6 @@
 # VELOCITY — Ultimate Vehicle Mod
 
-Mod de veículos para **Minecraft Java 1.21.1 / Fabric / Java 21**. Versão atual: **Velo 0.06**.
+Mod de veículos para **Minecraft Java 1.21.1 / Fabric / Java 21**. Versão atual: **Velo 0.07**. 🔊 [Ouça o motor (gravação no jogo)](docs/audio/velo-0.07-gravacao-no-jogo.ogg)
 
 ![Velo 0.06](docs/screenshots/velo-0.06.png)
 
