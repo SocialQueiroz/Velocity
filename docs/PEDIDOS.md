@@ -42,3 +42,19 @@ Registro do que foi pedido, para orientar as próximas versões. Status atualiza
   físicas reais; som do motor gerado para cada motor (V8, I4, V12…) com o sintetizador.
 - **Status:** pendente — **Velo 0.11–0.13** (oficina de montagem); une-se ao sistema de
   mecânica da seção 19 (parafusos, ferramentas, troca física de peças).
+
+### 5. Som do motor não está bom → sistema de áudio completo por motor
+- O som atual (V6 sintetizado da Velo 0.07) **não agradou**.
+- **Cada motor tem que ter o seu som**: V8 aspirado, V6 biturbo, I4, I6, V10, V12, boxer,
+  rotativo, diesel, motos, elétrico — timbre, ronco e marcha lenta próprios.
+- **A marcha muda o som**: cada marcha tem caráter diferente (1ª gritando curta, marchas longas
+  mais graves e cheias), queda de giro audível na troca, "pipoco"/estalo de escape ao soltar,
+  corte de giro no limite.
+- Turbo (assobio, alívio de pressão "psssh"), nitro, admissão e escape modificados também mudam o som.
+- **Tem que estar bem completo.**
+- **Plano técnico:** perfil de áudio por motor no JSON (ordem de ignição, nº de cilindros,
+  escape, timbre); camadas mais densas (mais RPMs gravados, carga parcial); camada por marcha;
+  eventos (troca, corte de giro, estalos, turbo); avaliar gravações livres/licenciadas além da
+  síntese; som muda com as peças instaladas (pedido 4).
+- **Status:** pendente — entra junto com a **montagem de carros (Velo 0.11–0.12)**, já que cada
+  motor trocável precisa do próprio som; ajustes no som atual podem vir antes.

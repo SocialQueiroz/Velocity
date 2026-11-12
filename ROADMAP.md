@@ -16,8 +16,8 @@ o que não pôde ser testado aparece nas notas em [`PATCH_NOTES.md`](PATCH_NOTES
 | Velo 0.08 | **Interior refeito** (pedido): painel esculpido, bancos anatômicos, volante redondo, texturas, luz ambiente | ⏳ próxima |
 | Velo 0.09 | **Dano realista** (pedido): colisão orientada, amassado no ponto do impacto, peças soltando, fumaça, fogo, explosão conforme a velocidade | |
 | Velo 0.10 | **Terreno por veículo** (pedido) + suspensão por roda e inclinação; primeira **4x4 / Monster Truck** | |
-| Velo 0.11 | **Montagem de carros** (pedido) — sistema de peças/encaixes, motores trocáveis (V8 aspirado, I4, V12…) com som próprio | |
-| Velo 0.12 | Turbo, **nitro**, aerofólios, **vidro fumê**, suspensões trocáveis (inclusive Monster Truck em esportivo) | |
+| Velo 0.11 | **Montagem de carros** (pedido) — sistema de peças/encaixes, motores trocáveis (V8 aspirado, I4, V12…) com **som próprio por motor e por marcha** (pedido) | |
+| Velo 0.12 | Turbo e **nitro** (com som: assobio, alívio, estalos de escape), aerofólios, **vidro fumê**, suspensões trocáveis (inclusive Monster Truck em esportivo) | |
 | Velo 0.13 | Oficina de montagem: bancada/menu de montagem com visualização 3D | |
 | Velo 0.14 | Câmbio manual, modos Arcade/Simulação/Personalizado, HUD completa, painel do carro mostrando velocidade/RPM | |
 | Velo 0.15 | Combustível: bomba de combustível (bloco funcional), carregador elétrico | |
