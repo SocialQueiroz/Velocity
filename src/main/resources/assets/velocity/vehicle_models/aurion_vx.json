@@ -103,6 +103,77 @@
         0.9271838545667874
       ],
       "factor": 12.0
+    },
+    "door_l": {
+      "pivot": [
+        0.9586211405938491,
+        0.6,
+        0.84
+      ],
+      "animation": "door_l",
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "factor": -1.0821041362364843
+    },
+    "door_r": {
+      "pivot": [
+        -0.9586211405938491,
+        0.6,
+        0.84
+      ],
+      "animation": "door_r",
+      "axis": [
+        0,
+        1,
+        0
+      ],
+      "factor": 1.0821041362364843
+    },
+    "hood": {
+      "pivot": [
+        0,
+        0.840935868386475,
+        0.7
+      ],
+      "animation": "hood",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "factor": -0.9599310885968813
+    },
+    "trunk": {
+      "pivot": [
+        0,
+        0.92,
+        -1.5
+      ],
+      "animation": "trunk",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "factor": 0.8377580409572782
+    },
+    "spoiler": {
+      "parent": "trunk",
+      "pivot": [
+        0,
+        0.9209200000000001,
+        -1.94
+      ],
+      "animation": "spoiler",
+      "axis": [
+        1,
+        0,
+        0
+      ],
+      "factor": 0.24434609527920614
     }
   },
   "materials": {
@@ -123,6 +194,18 @@
     "display": {
       "role": "emissive",
       "light": "engine"
+    },
+    "amber_l": {
+      "role": "emissive",
+      "light": "turn_l"
+    },
+    "amber_r": {
+      "role": "emissive",
+      "light": "turn_r"
+    },
+    "reverse": {
+      "role": "emissive",
+      "light": "reverse"
     },
     "taillight": {
       "role": "emissive",

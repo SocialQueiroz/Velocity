@@ -4,5 +4,8 @@
   "category.velocity": "VELOCITY — Veículos",
   "key.velocity.engine": "Ligar/desligar motor",
   "key.velocity.lights": "Faróis",
-  "key.velocity.horn": "Buzina"
+  "key.velocity.horn": "Buzina",
+  "key.velocity.turn_left": "Seta esquerda",
+  "key.velocity.turn_right": "Seta direita",
+  "key.velocity.hazard": "Pisca-alerta"
 }

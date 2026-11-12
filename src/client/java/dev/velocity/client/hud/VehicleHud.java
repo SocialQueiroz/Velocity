@@ -42,6 +42,12 @@ public final class VehicleHud {
         ctx.fill(x, y + 36, x + (int) (barW * fuelFrac), y + 40, fuelFrac < 0.15f ? 0xFFFFA000 : 0xFF66BB6A);
         ctx.drawText(tr, String.format("Comb. %.1f L", v.getFuel()), x, y + 43, 0xFFB0BEC5, false);
 
+        // indicadores de seta / pisca-alerta (piscam em fase com as lâmpadas)
+        boolean blink = v.blinkOn(tickCounter.getTickDelta(true));
+        boolean hz = v.hasVehicleFlag(VehicleEntity.FLAG_HAZARD);
+        if (blink && (hz || v.hasVehicleFlag(VehicleEntity.FLAG_TURN_L))) ctx.drawText(tr, "◀", w - 52, y, 0xFF4CAF50, false);
+        if (blink && (hz || v.hasVehicleFlag(VehicleEntity.FLAG_TURN_R))) ctx.drawText(tr, "▶", w - 40, y, 0xFF4CAF50, false);
+
         String status = (v.isEngineOn() ? "MOTOR ON" : "MOTOR OFF [N]") + (v.areLightsOn() ? "  FARÓIS" : "");
         ctx.drawText(tr, status, x, y + 55, v.isEngineOn() ? 0xFF66BB6A : 0xFFFFA000, false);
     }

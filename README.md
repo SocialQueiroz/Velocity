@@ -1,8 +1,8 @@
 # VELOCITY — Ultimate Vehicle Mod
 
-Mod de veículos para **Minecraft Java 1.21.1 / Fabric / Java 21**. Versão atual: **Velo 0.05**.
+Mod de veículos para **Minecraft Java 1.21.1 / Fabric / Java 21**. Versão atual: **Velo 0.06**.
 
-![Velo 0.05](docs/screenshots/velo-0.05.png)
+![Velo 0.06](docs/screenshots/velo-0.06.png)
 
 - **Download:** pasta [`releases/`](releases/) (um jar por versão, com a versão do jogo no nome)
 - **Novidades:** [`PATCH_NOTES.md`](PATCH_NOTES.md)
@@ -21,9 +21,11 @@ art/tools/visual_test.sh # abre o jogo sem monitor e tira screenshots do veícul
 ## Testar no jogo
 1. `./gradlew runClient`, crie um mundo em modo criativo.
 2. Na aba **Ferramentas**, pegue **Aurion VX** e clique com o botão direito no chão.
-3. Clique com o botão direito no veículo para entrar. **N** liga o motor.
-4. **W** acelera, **S** freia (parado: ré), **A/D** esterça, **Espaço** freio de mão, **J** faróis, **H** buzina.
-5. **Shift** sai. **Shift + ataque** recolhe o veículo.
+3. Clique na **porta** para abri-la e clique de novo para sentar (porta esquerda = motorista).
+   Clique no **capô** ou na **tampa traseira** para abri-los. **N** liga o motor.
+4. **W** acelera, **S** freia (parado: ré), **A/D** esterça, **Espaço** freio de mão, **J** faróis, **H** buzina,
+   **,** / **.** setas, **K** pisca-alerta.
+5. **Shift** sai. **Shift + clique** na porta aberta fecha. **Shift + ataque** recolhe o veículo.
 6. Teste aderência: dirija sobre gelo, areia e grama.
 
 > ⚠️ O modelo visual atual é um **protótipo de cubos para validar pivôs e animação**, não o asset final.

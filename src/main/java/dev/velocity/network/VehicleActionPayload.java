@@ -11,6 +11,9 @@ public record VehicleActionPayload(int action) implements CustomPayload {
     public static final int TOGGLE_ENGINE = 0;
     public static final int TOGGLE_LIGHTS = 1;
     public static final int HORN = 2;
+    public static final int TURN_LEFT = 3;
+    public static final int TURN_RIGHT = 4;
+    public static final int HAZARD = 5;
 
     public static final CustomPayload.Id<VehicleActionPayload> ID = new CustomPayload.Id<>(VelocityMod.id("vehicle_action"));
     public static final PacketCodec<RegistryByteBuf, VehicleActionPayload> CODEC =

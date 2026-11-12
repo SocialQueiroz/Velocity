@@ -128,12 +128,14 @@ class Loft:
     def emit(self, m, part, mat_fn, cap_mat=None):
         for s in range(len(self.S)-1):
             for i in range(self.n):
-                mat = mat_fn(i, s, self.fn[s][i], (self.z(s)+self.z(s+1))/2)
+                zm = (self.z(s)+self.z(s+1))/2
+                mat = mat_fn(i, s, self.fn[s][i], zm)
                 if mat is None: continue
+                pname = part(i, zm) if callable(part) else part
                 j = (i+1) % self.n
                 p = [self.S[s][i], self.S[s][j], self.S[s+1][j], self.S[s+1][i]]
                 nn = [self.vnormal(s, i), self.vnormal(s, i), self.vnormal(s+1, i), self.vnormal(s+1, i)]
-                m.face(part, mat, [p[0], p[3], p[2], p[1]], [nn[0], nn[3], nn[2], nn[1]])
+                m.face(pname, mat, [p[0], p[3], p[2], p[1]], [nn[0], nn[3], nn[2], nn[1]])
         if cap_mat:
             for s, flip in ((0, True), (len(self.S)-1, False)):
                 ring = self.S[s]
@@ -141,10 +143,11 @@ class Loft:
                 for i in range(self.n):
                     j = (i+1) % self.n
                     tri = [c, ring[j], ring[i]] if flip else [c, ring[i], ring[j]]
-                    m.face(part, cap_mat, tri)
+                    m.face(part(0, self.z(s)) if callable(part) else part, cap_mat, tri)
     def decal(self, m, part, mat, seg, z0, z1, t0=0.0, t1=1.0, offset=0.004):
         """Aplica uma faixa sobre o segmento 'seg' do laço entre z0..z1 (frações t0..t1 do segmento),
-        deslocada 'offset' para fora. Usada para faróis, frisos, entradas de ar, maçanetas."""
+        deslocada 'offset' para fora. Usada para faróis, frisos, entradas de ar, maçanetas.
+        'part' pode ser uma função (seg, z) -> nome da parte."""
         j = (seg+1) % self.n
         for s in range(len(self.S)-1):
             za, zb = self.z(s), self.z(s+1)
@@ -154,7 +157,9 @@ class Loft:
                 p = lerp3(lerp3(self.S[s][seg], self.S[s][j], t), lerp3(self.S[s+1][seg], self.S[s+1][j], t), u)
                 nrm = norm(add(mul(self.vnormal(s, seg), 1-u), mul(self.vnormal(s+1, seg), u)))
                 return add(p, mul(nrm, offset))
-            m.face(part, mat, [pt(u0, t0), pt(u1, t0), pt(u1, t1), pt(u0, t1)])
+            zm = za + (zb-za)*(u0+u1)/2
+            pname = part(seg, zm) if callable(part) else part
+            m.face(pname, mat, [pt(u0, t0), pt(u1, t0), pt(u1, t1), pt(u0, t1)])
 
 def annulus_sector(m, part, mat, axis_x, cy, cz, r0, r1, a0, a1, x0, x1, seg=8):
     """Prisma em forma de setor de coroa circular (eixo X): pinças, pastilhas, para-barros."""

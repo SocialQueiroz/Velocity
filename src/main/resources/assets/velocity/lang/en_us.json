@@ -4,5 +4,8 @@
   "category.velocity": "VELOCITY — Vehicles",
   "key.velocity.engine": "Engine on/off",
   "key.velocity.lights": "Headlights",
-  "key.velocity.horn": "Horn"
+  "key.velocity.horn": "Horn",
+  "key.velocity.turn_left": "Turn signal left",
+  "key.velocity.turn_right": "Turn signal right",
+  "key.velocity.hazard": "Hazard lights"
 }

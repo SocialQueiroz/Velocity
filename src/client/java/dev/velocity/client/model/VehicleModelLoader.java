@@ -114,7 +114,14 @@ public final class VehicleModelLoader {
         decls.forEach((name, d) -> { if (d.parent() != null) children.computeIfAbsent(d.parent(), k -> new ArrayList<>()).add(name); });
         int[] tris = {0};
         BakedVehicleModel.Part root = build("root", decls.get("root"), decls, children, mesh, roles, lights, tris);
-        return new BakedVehicleModel(id, texture, paint, root, tris[0]);
+        // limites da malha em repouso (usados para o raycast de interação no cliente)
+        Vector3f min = new Vector3f(Float.MAX_VALUE), max = new Vector3f(-Float.MAX_VALUE);
+        for (Map<String, List<ObjParser.Face>> mats : mesh.parts().values())
+            for (List<ObjParser.Face> faces : mats.values())
+                for (ObjParser.Face f : faces)
+                    for (ObjParser.Vertex v : f.vertices()) { min.min(new Vector3f(v.x(), v.y(), v.z())); max.max(new Vector3f(v.x(), v.y(), v.z())); }
+        if (tris[0] == 0) throw new IOException("malha vazia: " + meshId);
+        return new BakedVehicleModel(id, texture, paint, root, tris[0], min, max);
     }
 
     private static BakedVehicleModel.Part build(String name, Decl decl,

@@ -20,7 +20,19 @@ public record VehicleDefinition(
         Engine engine,
         Transmission transmission,
         Chassis chassis,
-        Fuel fuel) {
+        Fuel fuel,
+        java.util.List<InteractionZone> interactionZones) {
+
+    /**
+     * Região clicável no espaço do veículo (metros; +X esquerda, +Y cima, +Z frente).
+     * action: "door" (abre/fecha; com a porta aberta, entra no assento 'seat'), "hood", "trunk".
+     */
+    public record InteractionZone(String id, String action, float[] min, float[] max, int seat) {
+        public boolean contains(double x, double y, double z, double tolerance) {
+            return x >= min[0] - tolerance && x <= max[0] + tolerance && y >= min[1] - tolerance && y <= max[1] + tolerance
+                    && z >= min[2] - tolerance && z <= max[2] + tolerance;
+        }
+    }
 
     public record Dimensions(float length, float width, float height, float wheelbase, float wheelRadius) {}
 
@@ -89,9 +101,26 @@ public record VehicleDefinition(
                         c.get("frontal_area_m2").getAsFloat(), c.get("rolling_resistance").getAsFloat(),
                         c.get("tire_grip").getAsFloat(), c.get("max_brake_force_n").getAsFloat(),
                         c.get("max_steer_deg").getAsFloat(), c.get("steer_speed_falloff").getAsFloat()),
-                new Fuel(f.get("capacity_liters").getAsFloat(), f.get("consumption_l_per_kwh").getAsFloat()));
+                new Fuel(f.get("capacity_liters").getAsFloat(), f.get("consumption_l_per_kwh").getAsFloat()),
+                parseZones(o));
         def.validate();
         return def;
+    }
+
+    private static java.util.List<InteractionZone> parseZones(JsonObject o) {
+        if (!o.has("interaction_zones")) return java.util.List.of();
+        java.util.List<InteractionZone> list = new java.util.ArrayList<>();
+        for (var el : o.getAsJsonArray("interaction_zones")) {
+            JsonObject z = el.getAsJsonObject();
+            list.add(new InteractionZone(z.get("id").getAsString(), z.get("action").getAsString(),
+                    vec3(z.getAsJsonArray("min")), vec3(z.getAsJsonArray("max")), z.has("seat") ? z.get("seat").getAsInt() : -1));
+        }
+        return java.util.List.copyOf(list);
+    }
+
+    private static float[] vec3(JsonArray a) {
+        if (a.size() != 3) throw new IllegalArgumentException("vetor precisa de 3 valores");
+        return new float[]{a.get(0).getAsFloat(), a.get(1).getAsFloat(), a.get(2).getAsFloat()};
     }
 
     public void validate() {

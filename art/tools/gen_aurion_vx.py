@@ -47,7 +47,29 @@ atlas = Atlas({
     "dash":      (26, 27, 30, 255),        # plástico macio do painel
     "display":   (36, 120, 200, 255),      # telas (emissivas)
     "alu":       (150, 152, 156, 255),     # alumínio escovado
+    "amber_l":   (255, 150, 20, 255),      # setas (um material por lado = um canal de luz por lado)
+    "amber_r":   (255, 150, 20, 255),
+    "reverse":   (240, 242, 246, 255),
 })
+
+DOOR_Z0, DOOR_Z1 = -0.80, 0.84      # porta: da coluna B à dobradiça dianteira
+HOOD_Z0, HOOD_Z1 = 0.70, 1.84       # capô: da base do para-brisa até antes dos faróis
+TRUNK_Z0, TRUNK_Z1 = -2.14, -1.50   # tampa traseira
+
+def region(i, z):
+    """Parte móvel a que pertence uma face do loft (segmento i, z)."""
+    if i == 0: return "body"
+    left = i <= 7
+    side = i if left else mirror(i)
+    if side in (2, 3, 4, 5) and DOOR_Z0 < z < DOOR_Z1: return "door_l" if left else "door_r"
+    if side == 6 and DOOR_Z0 < z < 0.34: return "door_l" if left else "door_r"   # vidro da porta
+    if side in (6, 7) and HOOD_Z0 < z < HOOD_Z1: return "hood"
+    if side in (6, 7) and TRUNK_Z0 < z < TRUNK_Z1: return "trunk"
+    return "body"
+
+def detail_region(i, z):
+    r = region(i, z)
+    return "body_details" if r == "body" else r
 
 # ---------------------------------------------------------------- perfis (funções de z)
 def half_width(z):
@@ -133,7 +155,7 @@ def material(i, s, normal, z):
     r = roof(z)
     gh = 0.0 if r is None else r - center_top(z)
     if side == 6:      # janela lateral (entre colunas A e C)
-        return "glass" if (gh > 0.10 and -0.86 < z < 0.34) else "paint"
+        return "glass" if (gh > 0.10 and DOOR_Z0 < z < 0.34) else "paint"
     if side == 7:      # teto: para-brisa e vidro traseiro
         if gh > 0.02 and z > GH_PEAK0 + 0.02: return "glass"
         if gh > 0.02 and -1.48 < z < GH_PEAK1 - 0.04: return "glass"
@@ -144,9 +166,9 @@ def build():
     m = Mesh(atlas)
     secs = sections()
     body = Loft(secs)
-    body.emit(m, "body", material, cap_mat="paint")
+    body.emit(m, region, material, cap_mat="paint")
 
-    def both(seg, z0, z1, t0, t1, mat, part="body_details", off=0.004):
+    def both(seg, z0, z1, t0, t1, mat, part=detail_region, off=0.004):
         body.decal(m, part, mat, seg, z0, z1, t0, t1, off)
         body.decal(m, part, mat, mirror(seg), z0, z1, 1 - t1, 1 - t0, off)
 
@@ -166,18 +188,22 @@ def build():
     both(4, -0.66, -0.52, 0.25, 0.65, "chrome")
     # moldura das janelas (borracha preta) e coluna B escurecida
     both(5, -0.86, 0.36, 0.55, 1.00, "trim", off=0.002)
-    both(6, -0.20, -0.16, 0.00, 1.00, "trim", off=0.003)
     # forro de teto e colunas por dentro (faixas deslocadas 1 cm para dentro; invisíveis por fora)
     body.decal(m, "interior", "alcantara", 7, GH_PEAK1 - 0.04, GH_PEAK0 + 0.02, 0.0, 1.0, -0.012)
     body.decal(m, "interior", "alcantara", 7, -1.78, -1.48, 0.0, 1.0, -0.012)
     for seg in (6, mirror(6)):
         body.decal(m, "interior", "alcantara", seg, 0.30, GH_FRONT, 0.0, 1.0, -0.012)
         body.decal(m, "interior", "alcantara", seg, -1.78, -0.84, 0.0, 1.0, -0.012)
-        body.decal(m, "interior", "alcantara", seg, -0.22, -0.14, 0.0, 1.0, -0.012)
     # saídas de ar do capô
     both(6, 1.02, 1.32, 0.45, 0.85, "trim")
     # bocal de combustível (lado direito, traseira)
     body.decal(m, "body_details", "trim", mirror(4), -1.42, -1.30, 0.30, 0.80, 0.003)
+    # setas: dianteiras abaixo dos faróis e repetidoras laterais nos para-lamas
+    for seg, mat in ((3, "amber_l"), (mirror(3), "amber_r")):
+        t0, t1 = (0.10, 0.90)
+        body.decal(m, "body_details", mat, seg, 1.92, 2.10, t0, t1, 0.005)
+    body.decal(m, "body_details", "amber_l", 4, 1.50, 1.58, 0.30, 0.75, 0.004)
+    body.decal(m, "body_details", "amber_r", mirror(4), 1.50, 1.58, 0.25, 0.70, 0.004)
 
     # ------ frente: grade trapezoidal, entradas laterais, splitter, emblema
     zf = 2.2
@@ -206,17 +232,22 @@ def build():
         for x in (0.47, 0.60):
             cylinder(m, "rear", "chrome", "z", (sx * x, 0.25, zr - 0.02), 0.042, 0.12, seg=14, cap_mat="trim", hollow=0.032)
     box(m, "rear", "plate", -0.26, 0.42, zr - 0.012, 0.26, 0.53, zr + 0.002)
+    for sx, mat in ((1, "amber_l"), (-1, "amber_r")):
+        box(m, "rear_lights", mat, sx * 0.60, 0.655, zr - 0.012, sx * 0.80, 0.69, zr + 0.01)
+        box(m, "rear_lights", "reverse", sx * 0.30, 0.57, zr - 0.012, sx * 0.48, 0.61, zr + 0.01)
     box(m, "rear", "chrome", -0.06, 0.62, zr - 0.010, 0.06, 0.66, zr + 0.002)
 
     # ------ spoiler ativo (posição recolhida) — parte própria para animação na Velo 0.06
     box(m, "spoiler", "paint", -0.66, center_top(-2.05) + 0.004, -2.16, 0.66, center_top(-2.05) + 0.03, -1.94)
+    box(m, "spoiler", "carbon", -0.66, center_top(-2.05) + 0.03, -2.16, 0.66, center_top(-2.05) + 0.036, -2.06)
 
     # ------ retrovisores: haste + carcaça pintada + espelho
     for sx in (1, -1):
         hw = half_width(0.42)
-        box(m, "mirrors", "trim", sx * hw * 0.93, 0.90, 0.40, sx * (hw + 0.08), 0.93, 0.46)
-        box(m, "mirrors", "paint", sx * (hw + 0.05), 0.90, 0.36, sx * (hw + 0.21), 1.01, 0.48)
-        box(m, "mirrors", "mirror", sx * (hw + 0.06), 0.91, 0.355, sx * (hw + 0.20), 1.00, 0.362)
+        dp = "door_l" if sx > 0 else "door_r"   # retrovisor fica na porta
+        box(m, dp, "trim", sx * hw * 0.93, 0.90, 0.40, sx * (hw + 0.08), 0.93, 0.46)
+        box(m, dp, "paint", sx * (hw + 0.05), 0.90, 0.36, sx * (hw + 0.21), 1.01, 0.48)
+        box(m, dp, "mirror", sx * (hw + 0.06), 0.91, 0.355, sx * (hw + 0.20), 1.00, 0.362)
 
     # ------ estrutura: cofre do motor (frente), assoalho rebaixado na cabine, porta-malas (trás)
     box(m, "underbody", "underbody", -0.58, 0.14, 0.62, 0.58, 0.64, 2.0)
@@ -293,9 +324,10 @@ def interior(m):
         box(m, I, "steel", x - 0.24, 0.17, -0.45, x + 0.24, SEAT_HIP_Y - 0.08, 0.05)                     # base/trilhos
         # forro de porta com apoio de braço e puxador
         xd = sx * (hw_cab + 0.01)
-        box(m, I, "leather", xd - sx * 0.03, 0.30, -0.80, xd, 0.86, 0.40)
-        box(m, I, "alcantara", xd - sx * 0.09, 0.52, -0.55, xd - sx * 0.03, 0.57, 0.15)
-        box(m, I, "alu", xd - sx * 0.05, 0.62, -0.05, xd - sx * 0.032, 0.66, 0.10)
+        D = "door_l" if sx > 0 else "door_r"
+        box(m, D, "leather", xd - sx * 0.03, 0.30, -0.78, xd, 0.86, 0.40)
+        box(m, D, "alcantara", xd - sx * 0.09, 0.52, -0.55, xd - sx * 0.03, 0.57, 0.15)
+        box(m, D, "alu", xd - sx * 0.05, 0.62, -0.05, xd - sx * 0.032, 0.66, 0.10)
     # pedais (motorista): acelerador e freio
     box(m, I, "alu", SEAT_X - 0.16, 0.24, 0.47, SEAT_X - 0.04, 0.34, 0.49)
     box(m, I, "alu", SEAT_X + 0.04, 0.22, 0.48, SEAT_X + 0.10, 0.36, 0.50)
@@ -463,6 +495,17 @@ def main():
             **{f"pad_{c}_{s}": {"parent": f"steer_{c}"} for c in ("fl", "fr") for s in ("inner", "outer")},
             "steering_wheel": {"pivot": list(SW_CENTER), "animation": "steering_wheel",
                                "axis": list(steering_axis()), "factor": 12.0},
+            # dobradiças: portas na frente (eixo vertical), capô na base do para-brisa, tampa à frente dela
+            "door_l": {"pivot": [half_width(DOOR_Z1) * 0.99, 0.6, DOOR_Z1], "animation": "door_l", "axis": [0, 1, 0],
+                       "factor": -math.radians(62)},
+            "door_r": {"pivot": [-half_width(DOOR_Z1) * 0.99, 0.6, DOOR_Z1], "animation": "door_r", "axis": [0, 1, 0],
+                       "factor": math.radians(62)},
+            "hood": {"pivot": [0, center_top(HOOD_Z0), HOOD_Z0], "animation": "hood", "axis": [1, 0, 0],
+                     "factor": -math.radians(55)},
+            "trunk": {"pivot": [0, center_top(TRUNK_Z1), TRUNK_Z1], "animation": "trunk", "axis": [1, 0, 0],
+                      "factor": math.radians(48)},
+            "spoiler": {"parent": "trunk", "pivot": [0, center_top(-2.05), -1.94], "animation": "spoiler",
+                        "axis": [1, 0, 0], "factor": math.radians(14)},
         },
         "materials": {
             "paint": {"role": "paint"},
@@ -470,6 +513,9 @@ def main():
             "headlight": {"role": "emissive", "light": "headlights"},
             "drl": {"role": "emissive", "light": "always"},
             "display": {"role": "emissive", "light": "engine"},
+            "amber_l": {"role": "emissive", "light": "turn_l"},
+            "amber_r": {"role": "emissive", "light": "turn_r"},
+            "reverse": {"role": "emissive", "light": "reverse"},
             "taillight": {"role": "emissive", "light": "tail"},
         },
     }

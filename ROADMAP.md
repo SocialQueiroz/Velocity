@@ -11,8 +11,8 @@ o que não pôde ser testado aparece nas notas em [`PATCH_NOTES.md`](PATCH_NOTES
 | **Velo 0.03** | Aurion VX — carroceria externa (casca, capô, portas, para-choques, faróis, lanternas, vidros) | ✅ |
 | **Velo 0.04** | Aurion VX — freios visíveis (discos, pinças, pastilhas), cubos, suspensão visível, caixas de roda | ✅ |
 | **Velo 0.05** | Aurion VX — interior (painel, volante animado, bancos, console, pedais) + câmera interna | ✅ |
-| Velo 0.06 | Animações: portas, capô, porta-malas, setas, pisca-alerta, ré, spoiler ativo | ⏳ próxima |
-| Velo 0.07 | Áudio de motor em camadas por RPM/carga, partida, desligamento, buzina própria | |
+| **Velo 0.06** | Animações: portas, capô, porta-malas, setas, pisca-alerta, ré, spoiler ativo | ✅ |
+| Velo 0.07 | Áudio de motor em camadas por RPM/carga, partida, desligamento, buzina própria | ⏳ próxima |
 | Velo 0.08 | Física: suspensão por roda, inclinação de terreno, colisões com dano | |
 | Velo 0.09 | Câmbio manual, modos Arcade/Simulação/Personalizado, HUD completa | |
 | Velo 0.10 | Combustível: bomba de combustível (bloco funcional), carregador elétrico | |

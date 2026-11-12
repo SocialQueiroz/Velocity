@@ -77,6 +77,56 @@ public final class VisualTestHarness {
                 "VISUALTEST guinada com esterço à direita: Δyaw = {} (positivo = horário visto de cima = direita)",
                 vehicle.getYaw() - yaw0[0]))));
         t += 70;
+        steps.add(new Step(t - 2, c -> server(c, s -> { vehicle.halt(); vehicle.refreshPositionAndAngles(CAR.x, CAR.y, CAR.z, 0f, 0f); })));
+        // ré: motor ligado + "freio" parado engata ré → luz de ré; depois volta à posição
+        steps.add(new Step(t, c -> server(c, s -> { s.getOverworld().setTimeOfDay(18000); vehicle.handleAction(0); })));
+        for (int i = 2; i < 12; i += 2) steps.add(new Step(t + i, c -> server(c, s -> vehicle.receiveInput(new VehicleInput(0, 0.05f, 0, false)))));
+        steps.add(new Step(t + 3, c -> placeCamera(c, 6, 1.6, 200, DEFAULT_TARGET)));
+        steps.add(new Step(t + 12, c -> shot(c, "night_reverse")));
+        steps.add(new Step(t + 14, c -> server(c, s -> {
+            vehicle.handleAction(0);
+            vehicle.halt();
+            vehicle.refreshPositionAndAngles(CAR.x, CAR.y, CAR.z, 0f, 0f);
+            s.getOverworld().setTimeOfDay(6000);
+        })));
+        t += 30;
+        // zonas de interação: clique na porta esquerda, capô e porta-malas (pontos no espaço do veículo)
+        steps.add(new Step(t, c -> server(c, s -> {
+            ServerPlayerEntity p = s.getPlayerManager().getPlayerList().get(0);
+            VelocityMod.LOGGER.info("VISUALTEST zona porta: {}", vehicle.interactAt(p, new Vec3d(1.0, 0.7, 0.0), net.minecraft.util.Hand.MAIN_HAND));
+            VelocityMod.LOGGER.info("VISUALTEST zona capô: {}", vehicle.interactAt(p, new Vec3d(0, 0.85, 1.4), net.minecraft.util.Hand.MAIN_HAND));
+            VelocityMod.LOGGER.info("VISUALTEST zona porta-malas: {}", vehicle.interactAt(p, new Vec3d(0, 0.95, -1.9), net.minecraft.util.Hand.MAIN_HAND));
+            VelocityMod.LOGGER.info("VISUALTEST flags após cliques: {}", Integer.toBinaryString(vehicle.getVehicleFlags()));
+            vehicle.handleAction(3);   // seta esquerda
+        })));
+        steps.add(new Step(t + 2, c -> placeCamera(c, 5.0, 1.8, 40, DEFAULT_TARGET)));
+        steps.add(new Step(t + 40, c -> shot(c, "open_front34")));
+        steps.add(new Step(t + 42, c -> {
+            placeCamera(c, 5.0, 2.0, 210, DEFAULT_TARGET);
+            if (c.world.getEntityById(vehicle.getId()) instanceof VehicleEntity cv) {   // força o spoiler (só visual)
+                cv.anim[VehicleEntity.ANIM_SPOILER] = 1f; cv.prevAnim[VehicleEntity.ANIM_SPOILER] = 1f;
+            }
+        }));
+        steps.add(new Step(t + 44, c -> server(c, s -> vehicle.handleAction(5))));   // pisca-alerta
+        for (int k = 0; k < 4; k++) { final int kk = k; steps.add(new Step(t + 66 + k * 4, c -> {
+            if (c.world.getEntityById(vehicle.getId()) instanceof VehicleEntity cv) { cv.anim[VehicleEntity.ANIM_SPOILER] = 1f; cv.prevAnim[VehicleEntity.ANIM_SPOILER] = 1f; }
+            shot(c, "open_rear34_" + kk);
+        })); }
+        // mira: olhando o capô de frente, fora da caixa quadrada de colisão (1,9 m)
+        steps.add(new Step(t + 84, c -> server(c, s -> {
+            ServerPlayerEntity p = s.getPlayerManager().getPlayerList().get(0);
+            p.setSneaking(true);   // Shift + clique na porta aberta = fechar (sem Shift = entrar)
+            vehicle.interactAt(p, new Vec3d(1.0, 0.7, 0.0), net.minecraft.util.Hand.MAIN_HAND);
+            p.setSneaking(false);
+            vehicle.interactAt(p, new Vec3d(0, 0.85, 1.4), net.minecraft.util.Hand.MAIN_HAND);
+            vehicle.interactAt(p, new Vec3d(0, 0.95, -1.9), net.minecraft.util.Hand.MAIN_HAND);
+            vehicle.handleAction(5); vehicle.handleAction(3);
+        })));
+        steps.add(new Step(t + 86, c -> placeCamera(c, 2.0, 1.1, 0, new Vec3d(0, 0.7, 2.0))));
+        steps.add(new Step(t + 110, c -> VelocityMod.LOGGER.info("VISUALTEST mira no capô: {} {}",
+                c.crosshairTarget == null ? "null" : c.crosshairTarget.getType(),
+                c.crosshairTarget instanceof net.minecraft.util.hit.EntityHitResult eh ? eh.getEntity().getType().toString() + " em " + eh.getPos().subtract(vehicle.getPos()) : "")));
+        t += 120;
         // jogador sentado: escala do ocupante (3ª pessoa) e câmera interna (1ª pessoa)
         steps.add(new Step(t, c -> server(c, s -> {
             ServerPlayerEntity p = s.getPlayerManager().getPlayerList().get(0);

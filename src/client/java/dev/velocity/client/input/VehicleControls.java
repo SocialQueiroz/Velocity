@@ -21,6 +21,9 @@ public final class VehicleControls {
     public static KeyBinding engine;
     public static KeyBinding lights;
     public static KeyBinding horn;
+    public static KeyBinding turnLeft;
+    public static KeyBinding turnRight;
+    public static KeyBinding hazard;
 
     private VehicleControls() {}
 
@@ -28,6 +31,9 @@ public final class VehicleControls {
         engine = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.velocity.engine", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_N, CATEGORY));
         lights = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.velocity.lights", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_J, CATEGORY));
         horn = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.velocity.horn", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_H, CATEGORY));
+        turnLeft = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.velocity.turn_left", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_COMMA, CATEGORY));
+        turnRight = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.velocity.turn_right", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_PERIOD, CATEGORY));
+        hazard = KeyBindingHelper.registerKeyBinding(new KeyBinding("key.velocity.hazard", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_K, CATEGORY));
         ClientTickEvents.END_CLIENT_TICK.register(VehicleControls::tick);
     }
 
@@ -50,6 +56,9 @@ public final class VehicleControls {
         while (engine.wasPressed()) ClientPlayNetworking.send(new VehicleActionPayload(VehicleActionPayload.TOGGLE_ENGINE));
         while (lights.wasPressed()) ClientPlayNetworking.send(new VehicleActionPayload(VehicleActionPayload.TOGGLE_LIGHTS));
         while (horn.wasPressed()) ClientPlayNetworking.send(new VehicleActionPayload(VehicleActionPayload.HORN));
+        while (turnLeft.wasPressed()) ClientPlayNetworking.send(new VehicleActionPayload(VehicleActionPayload.TURN_LEFT));
+        while (turnRight.wasPressed()) ClientPlayNetworking.send(new VehicleActionPayload(VehicleActionPayload.TURN_RIGHT));
+        while (hazard.wasPressed()) ClientPlayNetworking.send(new VehicleActionPayload(VehicleActionPayload.HAZARD));
     }
 
     private static void drain() {
@@ -57,5 +66,8 @@ public final class VehicleControls {
         while (engine.wasPressed()) { }
         while (lights.wasPressed()) { }
         while (horn.wasPressed()) { }
+        while (turnLeft.wasPressed()) { }
+        while (turnRight.wasPressed()) { }
+        while (hazard.wasPressed()) { }
     }
 }

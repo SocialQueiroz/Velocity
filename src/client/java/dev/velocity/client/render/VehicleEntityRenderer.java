@@ -22,6 +22,7 @@ import net.minecraft.util.math.RotationAxis;
 public class VehicleEntityRenderer extends EntityRenderer<VehicleEntity> {
     private static final Identifier FALLBACK_TEXTURE = VelocityMod.id("textures/entity/prototype_car.png");
     private final PrototypeCarModel fallback;
+    private final float[] animScratch = new float[VehicleEntity.ANIM_COUNT];
 
     public VehicleEntityRenderer(EntityRendererFactory.Context ctx) {
         super(ctx);
@@ -39,8 +40,14 @@ public class VehicleEntityRenderer extends EntityRenderer<VehicleEntity> {
         BakedVehicleModel model = modelId != null ? VehicleModelManager.get(modelId) : null;
         if (model != null) {
             float spin = entity.prevWheelSpin + (entity.wheelSpin - entity.prevWheelSpin) * tickDelta;
+            for (int i = 0; i < VehicleEntity.ANIM_COUNT; i++) animScratch[i] = entity.animFraction(i, tickDelta);
+            boolean blink = entity.blinkOn(tickDelta);
+            boolean hazard = entity.hasVehicleFlag(VehicleEntity.FLAG_HAZARD);
             var pose = new VehicleMeshRenderer.Pose(spin, (float) Math.toRadians(entity.getSteerDeg()),
-                    model.defaultPaint(), entity.areLightsOn(), entity.isBraking(), entity.isEngineOn());
+                    model.defaultPaint(), entity.areLightsOn(), entity.isBraking(), entity.isEngineOn(), animScratch,
+                    blink && (hazard || entity.hasVehicleFlag(VehicleEntity.FLAG_TURN_L)),
+                    blink && (hazard || entity.hasVehicleFlag(VehicleEntity.FLAG_TURN_R)),
+                    entity.isReversing());
             VehicleMeshRenderer.render(model, pose, matrices, consumers, light);
         } else {
             renderFallback(entity, tickDelta, matrices, consumers, light);

@@ -12,7 +12,8 @@ import java.util.List;
  * Layout de cada quad em {@link Batch#data}: 4 vértices × (x, y, z, u, v, nx, ny, nz).
  * Triângulos são armazenados como quads degenerados (4º vértice = 3º).
  */
-public record BakedVehicleModel(Identifier id, Identifier texture, int defaultPaint, Part root, int triangleCount) {
+public record BakedVehicleModel(Identifier id, Identifier texture, int defaultPaint, Part root, int triangleCount,
+                                Vector3f boundsMin, Vector3f boundsMax) {
 
     public static final int FLOATS_PER_VERTEX = 8;
     public static final int FLOATS_PER_QUAD = FLOATS_PER_VERTEX * 4;

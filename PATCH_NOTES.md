@@ -5,6 +5,50 @@ Downloads: pasta [`releases/`](releases/). Instale o jar em `.minecraft/mods` ju
 
 ---
 
+## Velo 0.06 — Portas, capô, porta-malas e sinalização
+**Jar:** `releases/Velocity-Velo-0.06-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
+
+![Velo 0.06](docs/screenshots/velo-0.06.png)
+
+### Novidades
+- **Portas abrem de verdade** (62°, dobradiça na frente): a porta leva junto vidro, retrovisor,
+  maçaneta e forro interno.
+- **Entrar pela porta:** clique na porta fechada → ela abre; clique na porta aberta → você senta
+  **naquele lado** (esquerda = motorista, direita = passageiro) e a porta fecha sozinha.
+  **Shift + clique** na porta aberta fecha sem entrar. Ao sair, a porta do seu lado abre e fecha.
+- **Capô** (abre 55° na base do para-brisa) e **tampa traseira** (48°) — clique em cima deles.
+- **Spoiler ativo:** sobe acima de 90 km/h e recolhe abaixo de 65 km/h.
+- **Setas** (`,` e `.`) com repetidoras laterais e **pisca-alerta** (`K`), piscando em fase para
+  todos os jogadores; a seta se desliga sozinha quando o volante volta ao centro após a curva.
+  Indicadores ◀ ▶ na HUD.
+- **Luzes de ré** acendem com a ré engatada.
+- Você sai do carro pelo lado do seu assento, ao lado da porta.
+- **Mira no veículo inteiro:** dá para mirar e clicar em qualquer ponto do carro (4,4 m),
+  não só na caixa quadrada de 1,9 m do Minecraft.
+
+### Para quem cria veículos
+- `interaction_zones` no JSON do veículo: regiões clicáveis (porta/assento, capô, porta-malas).
+  Esta é a base do sistema de interação com peças da oficina (Velo 0.13+).
+- Novas fontes de animação: `door_l`, `door_r`, `hood`, `trunk`, `spoiler`; novos canais de luz:
+  `turn_l`, `turn_r`, `reverse`.
+
+### Correções
+- Assentos fixos: quem entra pela porta direita vira passageiro, não motorista.
+- Parar o veículo ao reposicioná-lo (`halt()`): antes ele continuava andando com a velocidade antiga.
+
+### Testado
+- Teste visual: porta, capô e tampa abrindo por cliques nas zonas; mira acertando a ponta do
+  capô (z = 2,26 m, fora da caixa de colisão); pisca-alerta alternando entre quadros; luz de ré.
+
+### Limitações conhecidas
+- Sons de porta/capô são do Minecraft (ferro/baú) até a Velo 0.07.
+- Cofre do motor ainda vazio sob o capô (o motor 3D vem com a mecânica de motor).
+- A caixa de **colisão** com blocos continua 1,9 m × 1,9 m (a frente e a traseira podem entrar
+  em paredes) — colisão orientada na Velo 0.08.
+- O servidor só aceita cliques a até ~4 m da caixa de colisão; em carros longos, aproxime-se.
+
+---
+
 ## Velo 0.05 — Interior completo e câmera interna
 **Jar:** `releases/Velocity-Velo-0.05-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
 

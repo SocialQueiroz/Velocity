@@ -19,7 +19,11 @@ public final class VehicleMeshRenderer {
     private VehicleMeshRenderer() {}
 
     /** Estado visual do veículo neste quadro. */
-    public record Pose(float wheelSpinRad, float steerRad, int paintArgb, boolean headlights, boolean brake, boolean engineOn) {}
+    /**
+     * @param anim frações 0..1 suavizadas indexadas por VehicleEntity.ANIM_*
+     */
+    public record Pose(float wheelSpinRad, float steerRad, int paintArgb, boolean headlights, boolean brake, boolean engineOn,
+                       float[] anim, boolean turnLeftOn, boolean turnRightOn, boolean reverse) {}
 
     public static void render(BakedVehicleModel model, Pose pose, MatrixStack matrices, VertexConsumerProvider consumers, int light) {
         RenderLayer opaque = RenderLayer.getEntityCutoutNoCull(model.texture());
@@ -34,6 +38,11 @@ public final class VehicleMeshRenderer {
         float angle = switch (part.animation()) {
             case "wheel_spin" -> pose.wheelSpinRad();
             case "steer", "steering_wheel" -> pose.steerRad();
+            case "door_l" -> pose.anim()[dev.velocity.vehicle.VehicleEntity.ANIM_DOOR_L];
+            case "door_r" -> pose.anim()[dev.velocity.vehicle.VehicleEntity.ANIM_DOOR_R];
+            case "hood" -> pose.anim()[dev.velocity.vehicle.VehicleEntity.ANIM_HOOD];
+            case "trunk" -> pose.anim()[dev.velocity.vehicle.VehicleEntity.ANIM_TRUNK];
+            case "spoiler" -> pose.anim()[dev.velocity.vehicle.VehicleEntity.ANIM_SPOILER];
             default -> 0f;
         } * part.factor();
         if (angle != 0f) {
@@ -55,6 +64,9 @@ public final class VehicleMeshRenderer {
                             : "headlights".equals(b.lightChannel()) ? pose.headlights()
                             : "brake".equals(b.lightChannel()) ? pose.brake()
                             : "tail".equals(b.lightChannel()) ? (pose.brake() || pose.headlights())
+                            : "turn_l".equals(b.lightChannel()) ? pose.turnLeftOn()
+                            : "turn_r".equals(b.lightChannel()) ? pose.turnRightOn()
+                            : "reverse".equals(b.lightChannel()) ? pose.reverse()
                             : false;
                     if (on) l = LightmapTextureManager.MAX_LIGHT_COORDINATE;
                     else color = 0xFF7A7A7A; // lente apagada mais escura
