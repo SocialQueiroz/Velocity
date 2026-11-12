@@ -27,6 +27,9 @@ public final class VelocitySounds {
     public static final SoundEvent GEAR_SHIFT = register("vehicle.gear_shift");
     public static final SoundEvent TIRE_SQUEAL = register("vehicle.tire_squeal");
     public static final SoundEvent WIND = register("vehicle.wind");
+    public static final SoundEvent CRASH_SMALL = register("vehicle.crash_small");
+    public static final SoundEvent CRASH_BIG = register("vehicle.crash_big");
+    public static final SoundEvent GLASS_BREAK = register("vehicle.glass_break");
 
     private static SoundEvent register(String path) {
         return Registry.register(Registries.SOUND_EVENT, VelocityMod.id(path), SoundEvent.of(VelocityMod.id(path)));

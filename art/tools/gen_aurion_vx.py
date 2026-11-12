@@ -374,6 +374,9 @@ def main():
     m.write_obj(os.path.join(ASSETS, "vehicle_models/aurion_vx.obj"), "Aurion VX — gerado por art/tools/gen_aurion_vx.py")
     atlas.write_png(os.path.join(ASSETS, "textures/vehicle/aurion_vx.png"))
     piv = lambda x, z: [x, WHEEL_R, z]
+    rigid = ["interior", "steering_wheel", "needle_rpm", "needle_speed", "liners", "underbody"] + \
+            [f"{p}_{c}" for p in ("wheel", "disc", "caliper", "knuckle", "suspension") for c in ("fl", "fr", "rl", "rr")] + \
+            [f"pad_{c}_{s}" for c in ("fl", "fr", "rl", "rr") for s in ("inner", "outer")]
     desc = {
         "_comment": "Gerado por art/tools/gen_aurion_vx.py — não editar à mão.",
         "mesh": "velocity:vehicle_models/aurion_vx.obj",
@@ -415,6 +418,8 @@ def main():
             "taillight": {"role": "emissive", "light": "tail"},
         },
     }
+    for name in rigid:   # não amassam em batidas
+        desc["parts"].setdefault(name, {})["rigid"] = True
     with open(os.path.join(ASSETS, "vehicle_models/aurion_vx.json"), "w") as f:
         json.dump(desc, f, indent=2, ensure_ascii=False); f.write("\n")
     print(f"Aurion VX: {m.triangles()} triângulos, {len(m.parts)} partes")

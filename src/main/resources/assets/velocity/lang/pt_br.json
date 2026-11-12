@@ -26,5 +26,9 @@
   "subtitles.velocity.vehicle.turn_tock": "Seta",
   "subtitles.velocity.vehicle.gear_shift": "Troca de marcha",
   "subtitles.velocity.vehicle.tire_squeal": "Pneus cantando",
-  "subtitles.velocity.vehicle.wind": "Vento"
+  "subtitles.velocity.vehicle.wind": "Vento",
+  "subtitles.velocity.vehicle.crash_small": "Batida leve",
+  "subtitles.velocity.vehicle.crash_big": "Batida forte",
+  "subtitles.velocity.vehicle.glass_break": "Vidro quebrando",
+  "gamerule.velocityExplosionsBreakBlocks": "Explosões de veículos destroem blocos"
 }

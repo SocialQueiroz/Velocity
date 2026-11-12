@@ -150,6 +150,29 @@ def tire_squeal():
     hiss = circ_filter(rng.normal(0, 1, n), lo=1000, hi=3000)
     return 0.6 * tone + 0.8 * hiss / np.std(hiss) * 0.3
 
+def crash(big):
+    """Metal amassando: estalo inicial + ressonâncias metálicas inarmônicas + chiado de estilhaços."""
+    dur = 1.1 if big else 0.55
+    n = int(dur * SR); t = np.arange(n) / SR
+    y = np.zeros(n)
+    y += circ_filter(rng.normal(0, 1, n), lo=80, hi=5000) * np.exp(-t / (0.05 if big else 0.03)) * 1.2          # impacto
+    for f, dcy, a in ((137, .18, 1.0), (311, .12, .7), (523, .09, .6), (911, .07, .45), (1490, .05, .35), (2330, .04, .25)):
+        y += a * np.exp(-t / (dcy * (1.6 if big else 1.0))) * np.sin(2 * np.pi * f * (1 + 0.01 * rng.normal()) * t + rng.uniform(0, 6.28))
+    y += 0.9 * np.exp(-t / (0.09 if big else 0.05)) * np.sin(2 * np.pi * (55 if big else 85) * t)                  # pancada grave
+    for _ in range(14 if big else 5):                                                                                # rangidos/estalos tardios
+        t0 = rng.uniform(0.05, dur * 0.8); i0 = int(t0 * SR); L = min(n - i0, int(0.05 * SR))
+        tt = np.arange(L) / SR
+        y[i0:i0 + L] += rng.uniform(0.15, 0.5) * np.exp(-tt / 0.008) * circ_filter(rng.normal(0, 1, L), lo=1500, hi=7000)
+    return y
+
+def glass_break():
+    n = int(0.7 * SR); t = np.arange(n) / SR
+    y = circ_filter(rng.normal(0, 1, n), lo=2500, hi=9000) * np.exp(-t / 0.04)
+    for _ in range(40):
+        t0 = rng.uniform(0.0, 0.5); i0 = int(t0 * SR); L = min(n - i0, int(0.03 * SR)); tt = np.arange(L) / SR
+        y[i0:i0 + L] += rng.uniform(0.1, 0.5) * np.exp(-tt / 0.006) * np.sin(2 * np.pi * rng.uniform(3000, 8500) * tt)
+    return y
+
 def wind():
     n = int(2.0 * SR)
     return circ_filter(rng.normal(0, 1, n), lo=60, hi=900, slope=-0.5)
@@ -166,6 +189,7 @@ def main():
     save("vehicle/turn_tick", relay(2400)); save("vehicle/turn_tock", relay(1700))
     save("vehicle/gear_shift", shift())
     save("vehicle/tire_squeal", tire_squeal(), loop=True); save("vehicle/wind", wind(), loop=True)
+    save("vehicle/crash_small", crash(False)); save("vehicle/crash_big", crash(True)); save("vehicle/glass_break", glass_break())
     total = sum(os.path.getsize(os.path.join(dp, f)) for dp, _, fs in os.walk(OUT) for f in fs)
     print(f"OK: sons gerados em {OUT} ({total // 1024} KiB)")
 

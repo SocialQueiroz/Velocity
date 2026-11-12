@@ -23,6 +23,11 @@ public final class VelocityRegistries {
     public static final Item VEHICLE_SPAWNER = Registry.register(Registries.ITEM, VelocityMod.id("aurion_vx"),
             new VehicleSpawnerItem(new Item.Settings().maxCount(1), VehicleEntity.DEFAULT_DEFINITION));
 
+    /** Explosões de veículos destroem blocos? Padrão: não (protege construções). /gamerule velocityExplosionsBreakBlocks true */
+    public static final net.minecraft.world.GameRules.Key<net.minecraft.world.GameRules.BooleanRule> EXPLOSIONS_BREAK_BLOCKS =
+            net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry.register("velocityExplosionsBreakBlocks",
+                    net.minecraft.world.GameRules.Category.MISC, net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory.createBooleanRule(false));
+
     public static void init() {
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.TOOLS).register(entries -> entries.add(VEHICLE_SPAWNER));
     }

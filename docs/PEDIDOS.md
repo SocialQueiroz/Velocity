@@ -22,7 +22,7 @@ Registro do que foi pedido, para orientar as próximas versões. Status atualiza
   (½·m·v²) → deformação dos vértices próximos ao ponto (persistente e sincronizada) → limiares
   de energia por peça → fumaça/fogo/explosão. Explosão configurável (servidores podem desligar
   a destruição de blocos).
-- **Status:** pendente — **Velo 0.09**.
+- **Status:** ✅ entregue na **Velo 0.09** (falta: peças caindo no chão, dano entre veículos).
 
 ### 3. Cada carro tem seu terreno ideal
 - Esportivo é **sensível**: na grama/terra/pedra perde aderência, raspa o assoalho, quebra

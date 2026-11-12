@@ -37,7 +37,7 @@ import java.util.Optional;
 public final class VehicleModelLoader {
     private VehicleModelLoader() {}
 
-    private record Decl(String parent, Vector3f pivot, String animation, Vector3f axis, float factor) {}
+    private record Decl(String parent, Vector3f pivot, String animation, Vector3f axis, float factor, boolean rigid) {}
 
     /** Eixo e fator padrão por fonte de animação. */
     private static Vector3f defaultAxis(String anim) {
@@ -76,7 +76,7 @@ public final class VehicleModelLoader {
 
         // Declarações de partes (pai, pivô, animação)
         Map<String, Decl> decls = new LinkedHashMap<>();
-        decls.put("root", new Decl(null, new Vector3f(), "none", new Vector3f(1, 0, 0), 1f));
+        decls.put("root", new Decl(null, new Vector3f(), "none", new Vector3f(1, 0, 0), 1f, false));
         if (json.has("parts")) {
             for (Map.Entry<String, JsonElement> e : json.getAsJsonObject("parts").entrySet()) {
                 JsonObject p = e.getValue().getAsJsonObject();
@@ -94,10 +94,11 @@ public final class VehicleModelLoader {
                     axis.normalize();
                 }
                 float factor = p.has("factor") ? p.get("factor").getAsFloat() : defaultFactor(anim);
-                decls.put(e.getKey(), new Decl(p.has("parent") ? p.get("parent").getAsString() : "root", pivot, anim, axis, factor));
+                decls.put(e.getKey(), new Decl(p.has("parent") ? p.get("parent").getAsString() : "root", pivot, anim, axis, factor,
+                        p.has("rigid") && p.get("rigid").getAsBoolean()));
             }
         }
-        for (String partName : mesh.parts().keySet()) decls.putIfAbsent(partName, new Decl("root", new Vector3f(), "none", new Vector3f(1, 0, 0), 1f));
+        for (String partName : mesh.parts().keySet()) decls.putIfAbsent(partName, new Decl("root", new Vector3f(), "none", new Vector3f(1, 0, 0), 1f, false));
 
         // Valida pais e ciclos
         for (Map.Entry<String, Decl> e : decls.entrySet()) {
@@ -140,7 +141,7 @@ public final class VehicleModelLoader {
         for (String child : children.getOrDefault(name, List.of())) {
             kids.add(build(child, decls.get(child), decls, children, mesh, roles, lights, offColors, tris));
         }
-        return new BakedVehicleModel.Part(name, decl.pivot(), decl.animation(), decl.axis(), decl.factor(),
+        return new BakedVehicleModel.Part(name, decl.pivot(), decl.animation(), decl.axis(), decl.factor(), decl.rigid(),
                 List.copyOf(batches), List.copyOf(kids));
     }
 

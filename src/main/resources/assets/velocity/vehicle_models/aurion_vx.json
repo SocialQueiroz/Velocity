@@ -27,7 +27,8 @@
         0.34,
         1.28
       ],
-      "animation": "wheel_spin"
+      "animation": "wheel_spin",
+      "rigid": true
     },
     "wheel_fr": {
       "parent": "steer_fr",
@@ -36,7 +37,8 @@
         0.34,
         1.28
       ],
-      "animation": "wheel_spin"
+      "animation": "wheel_spin",
+      "rigid": true
     },
     "wheel_rl": {
       "pivot": [
@@ -44,7 +46,8 @@
         0.34,
         -1.34
       ],
-      "animation": "wheel_spin"
+      "animation": "wheel_spin",
+      "rigid": true
     },
     "wheel_rr": {
       "pivot": [
@@ -52,43 +55,56 @@
         0.34,
         -1.34
       ],
-      "animation": "wheel_spin"
+      "animation": "wheel_spin",
+      "rigid": true
     },
     "disc_fl": {
-      "parent": "wheel_fl"
+      "parent": "wheel_fl",
+      "rigid": true
     },
     "disc_fr": {
-      "parent": "wheel_fr"
+      "parent": "wheel_fr",
+      "rigid": true
     },
     "disc_rl": {
-      "parent": "wheel_rl"
+      "parent": "wheel_rl",
+      "rigid": true
     },
     "disc_rr": {
-      "parent": "wheel_rr"
+      "parent": "wheel_rr",
+      "rigid": true
     },
     "caliper_fl": {
-      "parent": "steer_fl"
+      "parent": "steer_fl",
+      "rigid": true
     },
     "caliper_fr": {
-      "parent": "steer_fr"
+      "parent": "steer_fr",
+      "rigid": true
     },
     "knuckle_fl": {
-      "parent": "steer_fl"
+      "parent": "steer_fl",
+      "rigid": true
     },
     "knuckle_fr": {
-      "parent": "steer_fr"
+      "parent": "steer_fr",
+      "rigid": true
     },
     "pad_fl_inner": {
-      "parent": "steer_fl"
+      "parent": "steer_fl",
+      "rigid": true
     },
     "pad_fl_outer": {
-      "parent": "steer_fl"
+      "parent": "steer_fl",
+      "rigid": true
     },
     "pad_fr_inner": {
-      "parent": "steer_fr"
+      "parent": "steer_fr",
+      "rigid": true
     },
     "pad_fr_outer": {
-      "parent": "steer_fr"
+      "parent": "steer_fr",
+      "rigid": true
     },
     "steering_wheel": {
       "pivot": [
@@ -102,7 +118,8 @@
         -0.374606593415912,
         0.9271838545667874
       ],
-      "factor": 12.0
+      "factor": 12.0,
+      "rigid": true
     },
     "needle_rpm": {
       "pivot": [
@@ -116,7 +133,8 @@
         -0.27563735581699916,
         0.9612616959383189
       ],
-      "factor": 4.71238898038469
+      "factor": 4.71238898038469,
+      "rigid": true
     },
     "needle_speed": {
       "pivot": [
@@ -130,7 +148,8 @@
         -0.27563735581699916,
         0.9612616959383189
       ],
-      "factor": 4.71238898038469
+      "factor": 4.71238898038469,
+      "rigid": true
     },
     "door_l": {
       "pivot": [
@@ -202,6 +221,51 @@
         0
       ],
       "factor": 0.24434609527920614
+    },
+    "interior": {
+      "rigid": true
+    },
+    "liners": {
+      "rigid": true
+    },
+    "underbody": {
+      "rigid": true
+    },
+    "caliper_rl": {
+      "rigid": true
+    },
+    "caliper_rr": {
+      "rigid": true
+    },
+    "knuckle_rl": {
+      "rigid": true
+    },
+    "knuckle_rr": {
+      "rigid": true
+    },
+    "suspension_fl": {
+      "rigid": true
+    },
+    "suspension_fr": {
+      "rigid": true
+    },
+    "suspension_rl": {
+      "rigid": true
+    },
+    "suspension_rr": {
+      "rigid": true
+    },
+    "pad_rl_inner": {
+      "rigid": true
+    },
+    "pad_rl_outer": {
+      "rigid": true
+    },
+    "pad_rr_inner": {
+      "rigid": true
+    },
+    "pad_rr_outer": {
+      "rigid": true
     }
   },
   "materials": {

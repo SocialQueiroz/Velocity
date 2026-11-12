@@ -30,6 +30,7 @@ public record BakedVehicleModel(Identifier id, Identifier texture, int defaultPa
      * @param axis      eixo de rotação no espaço do modelo (normalizado)
      * @param factor    multiplicador aplicado ao valor da fonte
      */
-    public record Part(String name, Vector3f pivot, String animation, Vector3f axis, float factor,
+    /** @param rigid peças que não amassam em batidas (rodas, freios, suspensão, interior) */
+    public record Part(String name, Vector3f pivot, String animation, Vector3f axis, float factor, boolean rigid,
                        List<Batch> batches, List<Part> children) {}
 }

@@ -173,7 +173,53 @@ public final class VisualTestHarness {
                     new dev.velocity.network.VehicleActionPayload(dev.velocity.network.VehicleActionPayload.HORN)); }));
         steps.add(new Step(t + 290, c -> net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking.send(
                 new dev.velocity.network.VehicleActionPayload(dev.velocity.network.VehicleActionPayload.TOGGLE_ENGINE))));
-        steps.add(new Step(t + 330, MinecraftClient::scheduleStop));
+        // ---------------- DANO: 4 carros com impactos frontais de 30/60/100/150 km/h + batida real numa parede
+        final int A = t + 330;
+        final VehicleEntity[] lineup = new VehicleEntity[4];
+        final VehicleEntity[] wallCar = new VehicleEntity[1];
+        final float[] kmh = {30, 60, 100, 150};
+        steps.add(new Step(A, c -> { c.options.forwardKey.setPressed(false); c.options.backKey.setPressed(false);
+            server(c, s -> {
+                ServerWorld w = s.getOverworld();
+                ServerPlayerEntity p = s.getPlayerManager().getPlayerList().get(0);
+                p.stopRiding();
+                p.changeGameMode(net.minecraft.world.GameMode.SPECTATOR);
+                w.setTimeOfDay(6000);
+                for (int i = 0; i < 4; i++) {
+                    lineup[i] = VelocityRegistries.VEHICLE.create(w);
+                    lineup[i].refreshPositionAndAngles(-60.5 + i * 4.0, -60, -40.5, 0f, 0f);
+                    lineup[i].fillTank();
+                    w.spawnEntity(lineup[i]);
+                }
+                for (int x = 34; x <= 46; x++) for (int y = -60; y <= -56; y++) for (int z = 36; z <= 37; z++)
+                    w.setBlockState(new net.minecraft.util.math.BlockPos(x, y, z), net.minecraft.block.Blocks.OBSIDIAN.getDefaultState());
+                wallCar[0] = VelocityRegistries.VEHICLE.create(w);
+                wallCar[0].refreshPositionAndAngles(40.5, -60, 0.5, 0f, 0f);
+                wallCar[0].fillTank();
+                wallCar[0].acceptInputWithoutDriver = true;
+                w.spawnEntity(wallCar[0]);
+            }); }));
+        steps.add(new Step(A + 4, c -> placeCameraAbs(c, new Vec3d(-54.5, -57.6, -32.5), new Vec3d(-54.5, -59.4, -40.5))));
+        steps.add(new Step(A + 20, c -> server(c, s -> { for (int i = 0; i < 4; i++) lineup[i].applyFrontalImpact(kmh[i] / 3.6f);
+            for (int i = 0; i < 4; i++) VelocityMod.LOGGER.info("DANOTEST {} km/h → amassados={} motor={} soltas={} fogo={} carcaça={}", kmh[i],
+                    lineup[i].damage.dents().size(), lineup[i].damage.engineHealth(), lineup[i].damage.detached(),
+                    lineup[i].damage.burning(), lineup[i].damage.wrecked()); })));
+        steps.add(new Step(A + 45, c -> shot(c, "damage_lineup_burning")));
+        steps.add(new Step(A + 48, c -> placeCameraAbs(c, new Vec3d(-59.0, -58.6, -35.6), new Vec3d(-58.5, -59.4, -38.6))));
+        steps.add(new Step(A + 60, c -> shot(c, "damage_close_30_60")));
+        // batida real: acelera 35 m até a parede de obsidiana
+        steps.add(new Step(A + 62, c -> server(c, s -> wallCar[0].setEngineOn(true))));
+        for (int i = 90; i < 230; i += 2) steps.add(new Step(A + i, c -> server(c, s -> {
+            if (wallCar[0].damage.pristine()) wallCar[0].receiveInput(new VehicleInput(1, 0, 0, false)); })));
+        steps.add(new Step(A + 150, c -> placeCameraAbs(c, new Vec3d(-54.5, -57.6, -32.5), new Vec3d(-54.5, -59.4, -40.5))));
+        steps.add(new Step(A + 200, c -> shot(c, "damage_lineup_wrecks")));
+        steps.add(new Step(A + 232, c -> server(c, s -> VelocityMod.LOGGER.info(
+                "DANOTEST parede: z={} (parede em 36) amassados={} motor={} soltas={} fogo={} carcaça={} velocidade={}", wallCar[0].getZ(),
+                wallCar[0].damage.dents(), wallCar[0].damage.engineHealth(), wallCar[0].damage.detached(), wallCar[0].damage.burning(),
+                wallCar[0].damage.wrecked(), wallCar[0].getSpeed()))));
+        steps.add(new Step(A + 234, c -> placeCameraAbs(c, new Vec3d(44.2, -58.3, 31.0), new Vec3d(40.5, -59.4, 34.6))));
+        steps.add(new Step(A + 250, c -> shot(c, "wall_crash")));
+        steps.add(new Step(A + 256, MinecraftClient::scheduleStop));
 
         ClientTickEvents.END_CLIENT_TICK.register(VisualTestHarness::onTick);
     }
@@ -216,6 +262,16 @@ public final class VisualTestHarness {
             float yaw = (float) (MathHelper.atan2(dz, dx) * 180 / Math.PI) - 90f;
             float pitch = (float) -(MathHelper.atan2(dy, Math.sqrt(dx * dx + dz * dz)) * 180 / Math.PI);
             p.networkHandler.requestTeleport(ex, ey - p.getStandingEyeHeight(), ez, yaw, pitch);
+        });
+    }
+
+    private static void placeCameraAbs(MinecraftClient c, Vec3d eye, Vec3d target) {
+        server(c, s -> {
+            ServerPlayerEntity p = s.getPlayerManager().getPlayerList().get(0);
+            double dx = target.x - eye.x, dy = target.y - eye.y, dz = target.z - eye.z;
+            float yaw = (float) (MathHelper.atan2(dz, dx) * 180 / Math.PI) - 90f;
+            float pitch = (float) -(MathHelper.atan2(dy, Math.sqrt(dx * dx + dz * dz)) * 180 / Math.PI);
+            p.networkHandler.requestTeleport(eye.x, eye.y - p.getStandingEyeHeight(), eye.z, yaw, pitch);
         });
     }
 

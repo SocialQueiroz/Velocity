@@ -3,6 +3,7 @@ package dev.velocity.vehicle;
 import dev.velocity.core.VelocityMod;
 import dev.velocity.core.VelocityRegistries;
 import dev.velocity.core.VelocitySounds;
+import dev.velocity.damage.VehicleDamage;
 import dev.velocity.network.VehicleActionPayload;
 import dev.velocity.physics.SurfaceGrip;
 import dev.velocity.physics.VehicleInput;
@@ -25,6 +26,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -55,6 +57,8 @@ public class VehicleEntity extends Entity {
     /** Assento de cada ocupante: 2 bits por índice na lista de passageiros (até 4). */
     private static final TrackedData<Float> LOAD = DataTracker.registerData(VehicleEntity.class, TrackedDataHandlerRegistry.FLOAT);
     private static final TrackedData<Float> SLIP = DataTracker.registerData(VehicleEntity.class, TrackedDataHandlerRegistry.FLOAT);
+    /** Estado de dano (amassados, peças soltas, motor, fogo, carcaça) — ver {@link #writeDamage}. */
+    private static final TrackedData<NbtCompound> DAMAGE = DataTracker.registerData(VehicleEntity.class, TrackedDataHandlerRegistry.NBT_COMPOUND);
     private static final TrackedData<Integer> SEAT_MAP = DataTracker.registerData(VehicleEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     public static final int FLAG_DOOR_L = 1, FLAG_DOOR_R = 1 << 1, FLAG_HOOD = 1 << 2, FLAG_TRUNK = 1 << 3,
@@ -82,6 +86,12 @@ public class VehicleEntity extends Entity {
     private boolean fuelInitialised;
     /** Somente testes automatizados: aceita entrada sem motorista. Não é salvo nem sincronizado. */
     public boolean acceptInputWithoutDriver;
+
+    /** Dano: autoridade no servidor; no cliente é uma cópia atualizada pelo DataTracker. */
+    public final VehicleDamage damage = new VehicleDamage();
+    /** Cliente: incrementa a cada mudança de dano (invalida o cache de malha deformada). */
+    public int damageVersion;
+    private int impactCooldown;
 
     // Servidor: assento de cada ocupante, assento pedido pela porta clicada, fechamento automático das portas.
     private final java.util.Map<java.util.UUID, Integer> seats = new java.util.HashMap<>();
@@ -123,6 +133,7 @@ public class VehicleEntity extends Entity {
         builder.add(HEALTH, 100f);
         builder.add(FLAGS, 0);
         builder.add(SEAT_MAP, 0);
+        builder.add(DAMAGE, new NbtCompound());
         builder.add(LOAD, 0f);
         builder.add(SLIP, 0f);
     }
@@ -236,6 +247,13 @@ public class VehicleEntity extends Entity {
     public ActionResult interactAt(PlayerEntity player, Vec3d hitPos, Hand hand) {
         if (getWorld().isClient) return ActionResult.SUCCESS;
         if (player.getVehicle() == this) return ActionResult.PASS;
+        ItemStack held = player.getStackInHand(hand);
+        if (held.isOf(net.minecraft.item.Items.IRON_INGOT) && player.shouldCancelInteraction() && !damage.pristine()) {
+            repairFully();       // conserto provisório até existir a oficina
+            if (!player.getAbilities().creativeMode) held.decrement(1);
+            getWorld().playSound(null, getBlockPos(), SoundEvents.BLOCK_ANVIL_USE, SoundCategory.NEUTRAL, 0.8f, 1.2f);
+            return ActionResult.CONSUME;
+        }
         Vec3d local = hitPos.rotateY(getYaw() * MathHelper.RADIANS_PER_DEGREE);
         VehicleDefinition def = definition();
         if (def != null) {
@@ -310,7 +328,7 @@ public class VehicleEntity extends Entity {
     public void handleAction(int action) {
         switch (action) {
             case VehicleActionPayload.TOGGLE_ENGINE -> {
-                if (!state.engineOn && state.fuelLiters <= 0f) return;
+                if (!state.engineOn && (state.fuelLiters <= 0f || !damage.engineUsable())) return;
                 state.engineOn = !state.engineOn;
                 getWorld().playSound(null, getBlockPos(), state.engineOn ? VelocitySounds.V6_START : VelocitySounds.V6_STOP,
                         SoundCategory.NEUTRAL, 1.0f, 1.0f);
@@ -361,21 +379,42 @@ public class VehicleEntity extends Entity {
         float grip = isOnGround() ? SurfaceGrip.of(getWorld().getBlockState(below)) : 0f;
         float slopeSin = 0f; // TODO Fase 3: inclinação a partir de raycasts por roda
 
+        state.powerFactor = damage.powerFactor();
+        if (!damage.engineUsable()) state.engineOn = false;
         physics.step(def, in, TICK_DT, grip, slopeSin);
-        setYaw(getYaw() + state.yawRateDeg * TICK_DT);
 
-        float yawRad = getYaw() * MathHelper.RADIANS_PER_DEGREE;
+        // movimento proposto: guinada + deslocamento; sondas no contorno real do carro detectam o ponto de impacto
+        float oldYaw = getYaw();
+        float newYaw = oldYaw + state.yawRateDeg * TICK_DT;
+        float yawRad = newYaw * MathHelper.RADIANS_PER_DEGREE;
         double perTick = state.speed * TICK_DT; // 1 bloco = 1 metro
         Vec3d horizontal = new Vec3d(-MathHelper.sin(yawRad) * perTick, 0, MathHelper.cos(yawRad) * perTick);
-        applyGravityAndMove(horizontal);
-
-        if (horizontalCollision && Math.abs(state.speed) > 1f) {
-            float impact = Math.abs(state.speed);
-            dataTracker.set(HEALTH, Math.max(0f, dataTracker.get(HEALTH) - impact * 1.5f));
-            state.speed *= -0.15f; // pequeno ricochete
-            getWorld().playSound(null, getBlockPos(), SoundEvents.ENTITY_IRON_GOLEM_DAMAGE, SoundCategory.NEUTRAL,
-                    Math.min(1.5f, impact / 10f), 0.7f);
+        if (impactCooldown > 0) impactCooldown--;
+        Probe hit = (Math.abs(state.speed) > 0.05f || Math.abs(state.yawRateDeg) > 1f) ? probeCollision(def, oldYaw, newYaw, horizontal) : null;
+        if (hit != null) {
+            float speedBefore = state.speed;
+            boolean headOn = hit.nz != 0 && Math.signum(speedBefore) == -Math.signum(hit.nz);
+            float impactSpeed = headOn ? Math.abs(speedBefore)
+                    : Math.abs(speedBefore) * 0.3f + Math.abs(state.yawRateDeg * MathHelper.RADIANS_PER_DEGREE) * (float) Math.hypot(hit.x, hit.z);
+            if (hit.nz != 0) state.speed = headOn ? -0.12f * speedBefore : speedBefore * 0.5f;
+            else state.speed *= 0.85f;
+            onImpact(def, hit.x, 0.5f, hit.z, hit.nx, 0f, hit.nz, impactSpeed);
+            applyGravityAndMove(Vec3d.ZERO);     // este tick: sem avanço e sem guinada
+        } else {
+            setYaw(newYaw);
+            applyGravityAndMove(horizontal);
+            if (horizontalCollision && Math.abs(state.speed) > 1f) {   // reserva: caixa de colisão vanilla
+                float sp = Math.abs(state.speed);
+                float sgn = Math.signum(state.speed);
+                state.speed *= -0.12f;
+                onImpact(def, 0f, 0.5f, sgn * def.damageProfile().halfLength(), 0f, 0f, -sgn, sp);
+            }
         }
+        runOver(def);
+
+        // fogo → explosão
+        float boom = damage.tickBurn(state.fuelLiters / Math.max(1f, def.fuel().capacityLiters()));
+        if (boom > 0f) explode(def, boom);
 
         dataTracker.set(SPEED, state.speed);
         dataTracker.set(RPM, state.rpm);
@@ -386,6 +425,154 @@ public class VehicleEntity extends Entity {
         dataTracker.set(BRAKING, state.braking);
         dataTracker.set(LOAD, state.load);
         dataTracker.set(SLIP, state.tireSlip);
+    }
+
+    // ------------------------------------------------------------------ colisão orientada e dano
+
+    /** Sonda de colisão no contorno do veículo (espaço local) com a direção para dentro do carro. */
+    private record Probe(float x, float z, float nx, float nz) {}
+
+    private static Probe[] probesFor(VehicleDefinition def) {
+        float hl = def.damageProfile().halfLength(), hw = def.damageProfile().halfWidth();
+        return new Probe[]{
+                new Probe(0, hl, 0, -1), new Probe(hw * 0.45f, hl, 0, -1), new Probe(-hw * 0.45f, hl, 0, -1),
+                new Probe(hw * 0.85f, hl - 0.2f, 0, -1), new Probe(-hw * 0.85f, hl - 0.2f, 0, -1),
+                new Probe(0, -hl, 0, 1), new Probe(hw * 0.45f, -hl, 0, 1), new Probe(-hw * 0.45f, -hl, 0, 1),
+                new Probe(hw * 0.85f, -hl + 0.2f, 0, 1), new Probe(-hw * 0.85f, -hl + 0.2f, 0, 1),
+                new Probe(hw, hl * 0.55f, -1, 0), new Probe(hw, 0, -1, 0), new Probe(hw, -hl * 0.55f, -1, 0),
+                new Probe(-hw, hl * 0.55f, 1, 0), new Probe(-hw, 0, 1, 0), new Probe(-hw, -hl * 0.55f, 1, 0)};
+    }
+
+    private boolean solidAt(Vec3d origin, float yawDeg, Probe p) {
+        Vec3d w = origin.add(new Vec3d(p.x, 0, p.z).rotateY(-yawDeg * MathHelper.RADIANS_PER_DEGREE));
+        // acima da altura de degrau (0,6 m): meio-bloco não conta como parede
+        Box box = new Box(w.x - 0.06, w.y + 0.72, w.z - 0.06, w.x + 0.06, w.y + 1.0, w.z + 0.06);
+        return getWorld().getBlockCollisions(this, box).iterator().hasNext();
+    }
+
+    /** Primeira sonda que entraria num bloco com o movimento proposto (e que ainda não está dentro de um). */
+    @Nullable
+    private Probe probeCollision(VehicleDefinition def, float oldYaw, float newYaw, Vec3d delta) {
+        Vec3d now = getPos(), next = now.add(delta);
+        float sx = 0, sz = 0; int n = 0; Probe first = null;
+        for (Probe p : probesFor(def)) {
+            if (solidAt(next, newYaw, p) && !solidAt(now, oldYaw, p)) {
+                if (first == null) first = p;
+                if (p.nx == first.nx && p.nz == first.nz) { sx += p.x; sz += p.z; n++; }
+            }
+        }
+        return first == null ? null : new Probe(sx / n, sz / n, first.nx, first.nz);
+    }
+
+    private void onImpact(VehicleDefinition def, float lx, float ly, float lz, float nx, float ny, float nz, float impactSpeed) {
+        if (impactCooldown > 0 && impactSpeed < 6f) return;
+        impactCooldown = 6;
+        VehicleDamage.ImpactResult r = damage.applyImpact(def.damageProfile(), lx, ly, lz, nx, ny, nz, impactSpeed);
+        if (!r.any()) return;
+        Vec3d at = getPos().add(new Vec3d(lx, ly, lz).rotateY(-getYaw() * MathHelper.RADIANS_PER_DEGREE));
+        boolean big = impactSpeed > 12f;
+        getWorld().playSound(null, at.x, at.y, at.z, big ? VelocitySounds.CRASH_BIG : VelocitySounds.CRASH_SMALL,
+                SoundCategory.NEUTRAL, Math.min(2.5f, 0.5f + impactSpeed / 12f), 0.9f + random.nextFloat() * 0.2f);
+        if (impactSpeed > 9f) getWorld().playSound(null, at.x, at.y, at.z, VelocitySounds.GLASS_BREAK, SoundCategory.NEUTRAL, 0.9f, 1f);
+        if (getWorld() instanceof net.minecraft.server.world.ServerWorld sw) {
+            int count = (int) Math.min(60, 4 + impactSpeed * 2);
+            sw.spawnParticles(new net.minecraft.particle.BlockStateParticleEffect(net.minecraft.particle.ParticleTypes.BLOCK,
+                    net.minecraft.block.Blocks.IRON_BLOCK.getDefaultState()), at.x, at.y, at.z, count, 0.3, 0.3, 0.3, 0.15);
+            sw.spawnParticles(net.minecraft.particle.ParticleTypes.CRIT, at.x, at.y, at.z, count / 2, 0.3, 0.3, 0.3, 0.3);
+        }
+        if (r.occupantDamage() > 0f) {
+            for (Entity e : getPassengerList()) e.damage(getDamageSources().flyIntoWall(), r.occupantDamage());
+        }
+        if (r.instantExplosionPower() > 0f) explode(def, r.instantExplosionPower());
+        syncDamage();
+    }
+
+    private void explode(VehicleDefinition def, float power) {
+        if (damage.wrecked()) return;
+        damage.wreck(def.damageProfile(), getUuid().getLeastSignificantBits() ^ getWorld().getTime());
+        state.engineOn = false;
+        state.speed *= 0.2f;
+        state.fuelLiters = 0f;
+        removeAllPassengers();
+        boolean breakBlocks = getWorld().getGameRules().getBoolean(VelocityRegistries.EXPLOSIONS_BREAK_BLOCKS);
+        getWorld().createExplosion(this, getX(), getY() + 0.6, getZ(), power, breakBlocks,
+                breakBlocks ? World.ExplosionSourceType.TNT : World.ExplosionSourceType.NONE);
+        syncDamage();
+    }
+
+    /** Atropelamento: seres vivos dentro do contorno do carro em movimento levam dano e são arremessados. */
+    private void runOver(VehicleDefinition def) {
+        float v = Math.abs(state.speed);
+        if (v < 3f) return;
+        float hl = def.damageProfile().halfLength() + 0.3f, hw = def.damageProfile().halfWidth() + 0.3f;
+        float yawRad = getYaw() * MathHelper.RADIANS_PER_DEGREE;
+        Vec3d fwd = new Vec3d(-MathHelper.sin(yawRad), 0, MathHelper.cos(yawRad)).multiply(Math.signum(state.speed));
+        for (LivingEntity e : getWorld().getEntitiesByClass(LivingEntity.class, getBoundingBox().expand(hl), x -> x.isAlive() && x.getVehicle() != this)) {
+            Vec3d local = e.getPos().subtract(getPos()).rotateY(yawRad);
+            if (Math.abs(local.x) > hw || Math.abs(local.z) > hl || local.y > 1.6 || local.y < -1.0) continue;
+            if (e.damage(getDamageSources().generic(), v * 0.9f)) {
+                e.addVelocity(fwd.x * v * 0.06, 0.25 + v * 0.01, fwd.z * v * 0.06);
+                e.velocityModified = true;
+            }
+        }
+    }
+
+    private void syncDamage() {
+        dataTracker.set(DAMAGE, writeDamage());
+    }
+
+    private NbtCompound writeDamage() {
+        NbtCompound n = new NbtCompound();
+        float[] dents = damage.encodeDents();
+        int[] bits = new int[dents.length];
+        for (int i = 0; i < dents.length; i++) bits[i] = Float.floatToIntBits(dents[i]);
+        n.putIntArray("Dents", bits);
+        float[] zones = damage.zoneHealthArray();
+        int[] zb = new int[zones.length];
+        for (int i = 0; i < zones.length; i++) zb[i] = Float.floatToIntBits(zones[i]);
+        n.putIntArray("Zones", zb);
+        n.putFloat("Engine", damage.engineHealth());
+        net.minecraft.nbt.NbtList parts = new net.minecraft.nbt.NbtList();
+        for (String part : damage.detached()) parts.add(net.minecraft.nbt.NbtString.of(part));
+        n.put("Detached", parts);
+        n.putInt("Burn", damage.burnTicks());
+        n.putBoolean("Wrecked", damage.wrecked());
+        return n;
+    }
+
+    private void readDamage(NbtCompound n) {
+        if (n.isEmpty()) { damage.repairAll(); return; }
+        int[] bits = n.getIntArray("Dents");
+        float[] dents = new float[bits.length];
+        for (int i = 0; i < bits.length; i++) dents[i] = Float.intBitsToFloat(bits[i]);
+        int[] zb = n.getIntArray("Zones");
+        float[] zones = new float[zb.length];
+        for (int i = 0; i < zb.length; i++) zones[i] = Float.intBitsToFloat(zb[i]);
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        for (net.minecraft.nbt.NbtElement el : n.getList("Detached", net.minecraft.nbt.NbtElement.STRING_TYPE)) parts.add(el.asString());
+        damage.load(dents, zones, n.contains("Engine") ? n.getFloat("Engine") : 100f, parts, n.contains("Burn") ? n.getInt("Burn") : -1, n.getBoolean("Wrecked"));
+    }
+
+    @Override
+    public void onTrackedDataSet(TrackedData<?> data) {
+        super.onTrackedDataSet(data);
+        if (DAMAGE.equals(data) && getWorld().isClient) {
+            readDamage(dataTracker.get(DAMAGE));
+            damageVersion++;
+        }
+    }
+
+    /** Conserto completo (provisório até a oficina: Shift + clique com lingote de ferro; também usado por testes). */
+    public void repairFully() {
+        damage.repairAll();
+        dataTracker.set(HEALTH, 100f);
+        syncDamage();
+    }
+
+    /** Impacto frontal direto (testes e, no futuro, colisão entre veículos). */
+    public void applyFrontalImpact(float speedMs) {
+        VehicleDefinition def = definition();
+        if (def != null) onImpact(def, 0f, 0.5f, def.damageProfile().halfLength(), 0f, 0f, -1f, speedMs);
     }
 
     private void applyGravityAndMove(Vec3d horizontal) {
@@ -427,9 +614,32 @@ public class VehicleEntity extends Entity {
         float kmh = Math.abs(getSpeed()) * 3.6f;
         boolean spoilerUp = anim[ANIM_SPOILER] > 0.5f ? kmh > 65f : kmh > 90f;
         approach(ANIM_SPOILER, spoilerUp, 0.04f);
+        spawnDamageParticles();
         prevWheelSpin = wheelSpin;
         VehicleDefinitionClientHints hints = VehicleDefinitionClientHints.DEFAULT;
         wheelSpin += getSpeed() * TICK_DT / hints.wheelRadius();
+    }
+
+    /** Fumaça com o motor danificado, chamas quando pegando fogo, fumaça preta na carcaça. */
+    private void spawnDamageParticles() {
+        boolean burning = damage.burning();
+        if (!burning && !damage.wrecked() && damage.engineHealth() >= 55f) return;
+        float yawRad = getYaw() * MathHelper.RADIANS_PER_DEGREE;
+        Vec3d engine = getPos().add(new Vec3d((random.nextFloat() - 0.5f) * 0.8f, 0.85, 1.25 + (random.nextFloat() - 0.5f) * 0.6f).rotateY(-yawRad));
+        World w = getWorld();
+        if (burning) {
+            for (int i = 0; i < 3; i++) w.addParticle(net.minecraft.particle.ParticleTypes.FLAME, engine.x, engine.y, engine.z,
+                    (random.nextFloat() - 0.5f) * 0.04, 0.06 + random.nextFloat() * 0.05, (random.nextFloat() - 0.5f) * 0.04);
+            w.addParticle(net.minecraft.particle.ParticleTypes.LARGE_SMOKE, engine.x, engine.y + 0.3, engine.z, 0, 0.08, 0);
+            if (age % 4 == 0) w.addParticle(net.minecraft.particle.ParticleTypes.LAVA, engine.x, engine.y, engine.z, 0, 0, 0);
+        } else if (damage.wrecked()) {
+            if (age % 3 == 0) w.addParticle(net.minecraft.particle.ParticleTypes.CAMPFIRE_COSY_SMOKE, engine.x, engine.y, engine.z, 0, 0.05, 0);
+        } else {
+            float sev = 1f - damage.engineHealth() / 55f;
+            if (random.nextFloat() < 0.2f + sev * 0.8f)
+                w.addParticle(damage.engineHealth() < 30f ? net.minecraft.particle.ParticleTypes.LARGE_SMOKE : net.minecraft.particle.ParticleTypes.SMOKE,
+                        engine.x, engine.y, engine.z, 0, 0.04 + sev * 0.04, 0);
+        }
     }
 
     private void approach(int i, boolean open, float speed) {
@@ -491,6 +701,7 @@ public class VehicleEntity extends Entity {
         state.odometerM = nbt.getDouble("Odometer");
         dataTracker.set(HEALTH, nbt.contains("Health") ? nbt.getFloat("Health") : 100f);
         dataTracker.set(FLAGS, nbt.getInt("Flags"));
+        if (nbt.contains("Damage")) { readDamage(nbt.getCompound("Damage")); syncDamage(); }
         fuelInitialised = false;
     }
 
@@ -500,6 +711,7 @@ public class VehicleEntity extends Entity {
         nbt.putFloat("Fuel", state.fuelLiters);
         nbt.putDouble("Odometer", state.odometerM);
         nbt.putFloat("Health", dataTracker.get(HEALTH));
+        nbt.put("Damage", writeDamage());
         nbt.putInt("Flags", getVehicleFlags() & (FLAG_DOOR_L | FLAG_DOOR_R | FLAG_HOOD | FLAG_TRUNK | FLAG_HAZARD));
     }
 

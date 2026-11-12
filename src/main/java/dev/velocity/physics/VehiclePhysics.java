@@ -68,7 +68,7 @@ public final class VehiclePhysics {
         float maxTraction = ch.tireGrip() * surfaceGrip * m * G;
         float fDrive = 0f;
         if (running && state.gear != 0) {
-            float torque = en.torqueAt(state.rpm) * drive;
+            float torque = en.torqueAt(state.rpm) * drive * state.powerFactor;
             fDrive = torque * ratio * tr.efficiency() / wheelR;
             if (drive < 0.05f && Math.abs(v) > 0.5f) // freio-motor
                 fDrive -= Math.signum(v) * en.engineBrakeNm() * Math.abs(ratio) / wheelR;

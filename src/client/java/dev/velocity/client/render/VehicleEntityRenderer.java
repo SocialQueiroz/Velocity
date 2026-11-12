@@ -51,7 +51,9 @@ public class VehicleEntityRenderer extends EntityRenderer<VehicleEntity> {
                     entity.isReversing(),
                     Math.min(1f, entity.getRpm() / VehicleDefinitionClientHints.DEFAULT.gaugeMaxRpm()),
                     Math.min(1f, Math.abs(entity.getSpeed()) * 3.6f / VehicleDefinitionClientHints.DEFAULT.gaugeMaxKmh()));
-            VehicleMeshRenderer.render(model, pose, matrices, consumers, light);
+            var dmg = entity.damage.pristine() ? null
+                    : new VehicleMeshRenderer.Damage(entity, entity.damage.detached(), entity.damage.wrecked());
+            VehicleMeshRenderer.render(model, pose, dmg, matrices, consumers, light);
         } else {
             renderFallback(entity, tickDelta, matrices, consumers, light);
         }

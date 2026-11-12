@@ -29,6 +29,7 @@ public final class VehicleAudioController {
             if (client.world == null) { sets.values().forEach(VehicleSoundSet::stop); sets.clear(); }
             return;
         }
+        if (client.world.getTime() % 200 == 0) dev.velocity.client.model.DamageMeshCache.cleanup(client);
         List<VehicleEntity> near = client.world.getEntitiesByClass(VehicleEntity.class,
                         client.player.getBoundingBox().expand(RANGE), v -> !v.isRemoved())
                 .stream().sorted(Comparator.comparingDouble(v -> v.squaredDistanceTo(client.player)))

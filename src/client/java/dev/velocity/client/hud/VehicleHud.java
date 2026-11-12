@@ -48,6 +48,14 @@ public final class VehicleHud {
         if (blink && (hz || v.hasVehicleFlag(VehicleEntity.FLAG_TURN_L))) ctx.drawText(tr, "◀", w - 52, y, 0xFF4CAF50, false);
         if (blink && (hz || v.hasVehicleFlag(VehicleEntity.FLAG_TURN_R))) ctx.drawText(tr, "▶", w - 40, y, 0xFF4CAF50, false);
 
+        // dano: motor e pior zona da carroceria
+        if (!v.damage.pristine()) {
+            float worst = 100f;
+            for (var z : dev.velocity.damage.VehicleDamage.Zone.values()) worst = Math.min(worst, v.damage.zoneHealth(z));
+            String dmg = v.damage.burning() ? "FOGO! SAIA DO CARRO" : String.format("Motor %.0f%%  Lataria %.0f%%", v.damage.engineHealth(), worst);
+            ctx.drawText(tr, dmg, x, y - 12, v.damage.burning() ? 0xFFFF3030 : (v.damage.engineHealth() < 55f ? 0xFFFFA000 : 0xFFB0BEC5), false);
+        }
+
         String status = (v.isEngineOn() ? "MOTOR ON" : "MOTOR OFF [N]") + (v.areLightsOn() ? "  FARÓIS" : "");
         ctx.drawText(tr, status, x, y + 55, v.isEngineOn() ? 0xFF66BB6A : 0xFFFFA000, false);
     }

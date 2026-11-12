@@ -26,5 +26,9 @@
   "subtitles.velocity.vehicle.turn_tock": "Turn signal",
   "subtitles.velocity.vehicle.gear_shift": "Gear shift",
   "subtitles.velocity.vehicle.tire_squeal": "Tires squeal",
-  "subtitles.velocity.vehicle.wind": "Wind"
+  "subtitles.velocity.vehicle.wind": "Wind",
+  "subtitles.velocity.vehicle.crash_small": "Light crash",
+  "subtitles.velocity.vehicle.crash_big": "Heavy crash",
+  "subtitles.velocity.vehicle.glass_break": "Glass breaks",
+  "gamerule.velocityExplosionsBreakBlocks": "Vehicle explosions break blocks"
 }

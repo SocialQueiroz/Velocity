@@ -14,8 +14,8 @@ o que não pôde ser testado aparece nas notas em [`PATCH_NOTES.md`](PATCH_NOTES
 | **Velo 0.06** | Animações: portas, capô, porta-malas, setas, pisca-alerta, ré, spoiler ativo | ✅ |
 | **Velo 0.07** | Áudio de motor em camadas por RPM/carga, partida, desligamento, buzina própria | ✅ |
 | **Velo 0.08** | **Interior refeito** (pedido): painel esculpido, bancos anatômicos, volante redondo, ponteiros funcionais, luz ambiente | ✅ |
-| Velo 0.09 | **Dano realista** (pedido): colisão orientada, amassado no ponto do impacto, peças soltando, fumaça, fogo, explosão conforme a velocidade | ⏳ próxima |
-| Velo 0.10 | **Terreno por veículo** (pedido) + suspensão por roda e inclinação; primeira **4x4 / Monster Truck** | |
+| **Velo 0.09** | **Dano realista** (pedido): colisão orientada, amassado no ponto do impacto, peças soltando, fumaça, fogo, explosão conforme a velocidade | ✅ |
+| Velo 0.10 | **Terreno por veículo** (pedido) + suspensão por roda e inclinação; primeira **4x4 / Monster Truck** | ⏳ próxima |
 | Velo 0.11 | **Montagem de carros** (pedido) — sistema de peças/encaixes, motores trocáveis (V8 aspirado, I4, V12…) com **som próprio por motor e por marcha** (pedido) | |
 | Velo 0.12 | Turbo e **nitro** (com som: assobio, alívio, estalos de escape), aerofólios, **vidro fumê**, suspensões trocáveis (inclusive Monster Truck em esportivo) | |
 | Velo 0.13 | Oficina de montagem: bancada/menu de montagem com visualização 3D | |

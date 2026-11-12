@@ -21,7 +21,8 @@ public record VehicleDefinition(
         Transmission transmission,
         Chassis chassis,
         Fuel fuel,
-        java.util.List<InteractionZone> interactionZones) {
+        java.util.List<InteractionZone> interactionZones,
+        dev.velocity.damage.VehicleDamage.Profile damageProfile) {
 
     /**
      * Região clicável no espaço do veículo (metros; +X esquerda, +Y cima, +Z frente).
@@ -102,7 +103,8 @@ public record VehicleDefinition(
                         c.get("tire_grip").getAsFloat(), c.get("max_brake_force_n").getAsFloat(),
                         c.get("max_steer_deg").getAsFloat(), c.get("steer_speed_falloff").getAsFloat()),
                 new Fuel(f.get("capacity_liters").getAsFloat(), f.get("consumption_l_per_kwh").getAsFloat()),
-                parseZones(o));
+                parseZones(o),
+                parseDamage(o, d.get("length").getAsFloat() / 2f, d.get("width").getAsFloat() / 2f));
         def.validate();
         return def;
     }
@@ -116,6 +118,23 @@ public record VehicleDefinition(
                     vec3(z.getAsJsonArray("min")), vec3(z.getAsJsonArray("max")), z.has("seat") ? z.get("seat").getAsInt() : -1));
         }
         return java.util.List.copyOf(list);
+    }
+
+    private static dev.velocity.damage.VehicleDamage.Profile parseDamage(JsonObject o, float halfLength, float halfWidth) {
+        var Zone = dev.velocity.damage.VehicleDamage.Zone.FRONT;
+        if (!o.has("damage")) return new dev.velocity.damage.VehicleDamage.Profile(1f, Zone, halfLength, halfWidth, java.util.List.of());
+        JsonObject dj = o.getAsJsonObject("damage");
+        java.util.List<dev.velocity.damage.VehicleDamage.Breakable> list = new java.util.ArrayList<>();
+        if (dj.has("breakables")) for (var el : dj.getAsJsonArray("breakables")) {
+            JsonObject b = el.getAsJsonObject();
+            list.add(new dev.velocity.damage.VehicleDamage.Breakable(b.get("part").getAsString(),
+                    dev.velocity.damage.VehicleDamage.Zone.valueOf(b.get("zone").getAsString().toUpperCase(java.util.Locale.ROOT)),
+                    b.get("detach_below").getAsFloat()));
+        }
+        return new dev.velocity.damage.VehicleDamage.Profile(
+                dj.has("toughness") ? dj.get("toughness").getAsFloat() : 1f,
+                dj.has("engine_zone") ? dev.velocity.damage.VehicleDamage.Zone.valueOf(dj.get("engine_zone").getAsString().toUpperCase(java.util.Locale.ROOT)) : Zone,
+                halfLength, halfWidth, java.util.List.copyOf(list));
     }
 
     private static float[] vec3(JsonArray a) {

@@ -5,6 +5,62 @@ Downloads: pasta [`releases/`](releases/). Instale o jar em `.minecraft/mods` ju
 
 ---
 
+## Velo 0.09 — Dano realista: amassa, quebra, pega fogo e explode
+**Jar:** `releases/Velocity-Velo-0.09-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
+
+![Velo 0.09](docs/screenshots/velo-0.09.png)
+
+Pedido atendido: *"queria que o carro explodisse quando bate… dependendo da velocidade ele explode
+mais… fica amassado no lugar onde ele bateu"*.
+
+### Novidades
+- **Amassa onde bate:** a lataria é deformada de verdade no ponto do impacto (a malha 3D afunda e
+  enruga ali). Bater de novo no mesmo lugar aprofunda o amassado. Fica salvo no mundo.
+- **O dano cresce com a velocidade** (energia ∝ velocidade²):
+  | Batida | O que acontece |
+  |---|---|
+  | até ~7 km/h | nada (encostar) |
+  | ~30 km/h | amassado leve |
+  | ~60 km/h | **para-choque solta**, motor danificado, ocupantes se machucam, vidro quebra |
+  | ~80 km/h | capô solta, motor perde potência e **solta fumaça** |
+  | ~100 km/h | motor destruído e **pega fogo**: 3 a 5 segundos para sair antes de **explodir** |
+  | 130+ km/h | **explode na hora**, e quanto mais rápido, **maior a explosão** |
+- **Carcaça:** depois da explosão o carro vira uma carcaça queimada, sem vidros, com as peças
+  soltas e amassada por todos os lados, soltando fumaça.
+- **Colisão com o formato real do carro:** a frente e a traseira não entram mais em paredes —
+  16 pontos no contorno detectam onde o carro bateu (frente, traseira, laterais, cantos).
+- **Zonas de dano:** frente, traseira, esquerda e direita têm saúde separada; bater de lado não
+  estraga o motor (que fica na frente). Peças que soltam: para-choques, capô, spoiler, portas.
+- **Motor danificado perde potência**; destruído, não liga mais.
+- **Atropelamento:** criaturas atingidas pelo carro em movimento levam dano e são arremessadas.
+- **Sons novos** (sintetizados): batida leve, batida forte, vidro quebrando. Faíscas e estilhaços.
+- HUD mostra a saúde do motor e da lataria, e avisa **"FOGO! SAIA DO CARRO"**.
+- **Conserto provisório:** Shift + clique no carro com um **lingote de ferro** conserta tudo
+  (até a carcaça). O conserto de verdade virá com a oficina.
+- **Proteção de construções:** por padrão a explosão **não destrói blocos**. Para ligar:
+  `/gamerule velocityExplosionsBreakBlocks true`.
+
+### Para quem cria veículos
+- Bloco `damage` no JSON: `toughness` (robustez — um Monster Truck com 4.0 aguenta o que destrói
+  um esportivo), `engine_zone` e `breakables` (peça, zona, limite para soltar).
+- Partes com `"rigid": true` no modelo não amassam (rodas, freios, interior).
+
+### Testado
+- 10 testes automáticos das regras de dano + 9 da física.
+- Teste no jogo: 4 carros com impactos de 30/60/100/150 km/h (imagem) e **uma batida real**
+  acelerando contra uma parede: bateu a 78 km/h, parou com a frente na parede, amassado de 45 cm,
+  motor a 53 %, para-choque e capô soltos.
+
+### Limitações conhecidas
+- As peças que soltam **somem** (viram estilhaços); ainda não caem no chão como objetos.
+- Colisão **entre dois veículos** ainda não causa dano (só com blocos e criaturas).
+- Rodas e suspensão ainda não quebram; pneus não furam.
+- Amassados em portas/capô aparecem na posição fechada; a deformação é visual (a caixa de
+  colisão não muda).
+- Obstáculos de até 0,6 bloco (meio-bloco) são "subidos", não batidos.
+
+---
+
 ## Velo 0.08 — Interior refeito
 **Jar:** `releases/Velocity-Velo-0.08-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
 

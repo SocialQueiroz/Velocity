@@ -26,14 +26,31 @@ public final class VehicleMeshRenderer {
                        float[] anim, boolean turnLeftOn, boolean turnRightOn, boolean reverse,
                        float rpmFraction, float speedFraction) {}
 
+    /** Dano visível: veículo (para o cache de malha deformada), peças soltas e carcaça queimada. */
+    public record Damage(dev.velocity.vehicle.VehicleEntity vehicle, java.util.Set<String> detached, boolean wrecked) {}
+
     public static void render(BakedVehicleModel model, Pose pose, MatrixStack matrices, VertexConsumerProvider consumers, int light) {
-        RenderLayer opaque = RenderLayer.getEntityCutoutNoCull(model.texture());
-        // Passe 1: opacos, pintura e emissivos. Passe 2: translúcidos (vidros) depois, para mesclar corretamente.
-        renderPart(model.root(), pose, matrices, consumers.getBuffer(opaque), light, false);
-        renderPart(model.root(), pose, matrices, consumers.getBuffer(RenderLayer.getEntityTranslucent(model.texture())), light, true);
+        render(model, pose, null, matrices, consumers, light);
     }
 
-    private static void renderPart(BakedVehicleModel.Part part, Pose pose, MatrixStack m, VertexConsumer vc, int light, boolean translucentPass) {
+    public static void render(BakedVehicleModel model, Pose pose, Damage damage, MatrixStack matrices, VertexConsumerProvider consumers, int light) {
+        RenderLayer opaque = RenderLayer.getEntityCutoutNoCull(model.texture());
+        // Passe 1: opacos, pintura e emissivos. Passe 2: translúcidos (vidros) depois, para mesclar corretamente.
+        renderPart(model, model.root(), pose, damage, matrices, consumers.getBuffer(opaque), light, false);
+        if (damage == null || !damage.wrecked())   // carcaça: vidros estourados
+            renderPart(model, model.root(), pose, damage, matrices, consumers.getBuffer(RenderLayer.getEntityTranslucent(model.texture())), light, true);
+    }
+
+    private static int mul(int argb, int tint) {
+        int r = ((argb >> 16) & 255) * ((tint >> 16) & 255) / 255, g = ((argb >> 8) & 255) * ((tint >> 8) & 255) / 255, b = (argb & 255) * (tint & 255) / 255;
+        return (argb & 0xFF000000) | r << 16 | g << 8 | b;
+    }
+
+    private static void renderPart(BakedVehicleModel model, BakedVehicleModel.Part part, Pose pose, Damage damage, MatrixStack m,
+                                   VertexConsumer vc, int light, boolean translucentPass) {
+        if (damage != null && damage.detached().contains(part.name())) return;   // peça solta (e suas filhas)
+        boolean wrecked = damage != null && damage.wrecked();
+        boolean deform = damage != null && !part.rigid() && !damage.vehicle().damage.dents().isEmpty();
         m.push();
         float px = part.pivot().x(), py = part.pivot().y(), pz = part.pivot().z();
         float angle = switch (part.animation()) {
@@ -71,14 +88,15 @@ public final class VehicleMeshRenderer {
                             : "turn_r".equals(b.lightChannel()) ? pose.turnRightOn()
                             : "reverse".equals(b.lightChannel()) ? pose.reverse()
                             : false;
-                    if (on) l = LightmapTextureManager.MAX_LIGHT_COORDINATE;
+                    if (on && !wrecked) l = LightmapTextureManager.MAX_LIGHT_COORDINATE;
                     else color = b.offColor(); // lente/tela apagada
                 }
                 default -> { }
             }
-            emit(b.data(), entry, vc, color, l);
+            if (wrecked) color = mul(color, 0xFF3A3632);   // fuligem
+            emit(deform ? DamageMeshCache.get(damage.vehicle(), model, b) : b.data(), entry, vc, color, l);
         }
-        for (BakedVehicleModel.Part child : part.children()) renderPart(child, pose, m, vc, light, translucentPass);
+        for (BakedVehicleModel.Part child : part.children()) renderPart(model, child, pose, damage, m, vc, light, translucentPass);
         m.pop();
     }
 

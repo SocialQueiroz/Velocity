@@ -177,5 +177,35 @@
       }
     ],
     "subtitle": "subtitles.velocity.vehicle.wind"
+  },
+  "vehicle.crash_small": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/crash_small",
+        "stream": false,
+        "attenuation_distance": 48
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.crash_small"
+  },
+  "vehicle.crash_big": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/crash_big",
+        "stream": false,
+        "attenuation_distance": 48
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.crash_big"
+  },
+  "vehicle.glass_break": {
+    "sounds": [
+      {
+        "name": "velocity:vehicle/glass_break",
+        "stream": false,
+        "attenuation_distance": 48
+      }
+    ],
+    "subtitle": "subtitles.velocity.vehicle.glass_break"
   }
 }

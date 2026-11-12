@@ -107,5 +107,41 @@
         -1.45
       ]
     }
-  ]
+  ],
+  "damage": {
+    "toughness": 1.0,
+    "engine_zone": "front",
+    "breakables": [
+      {
+        "part": "front",
+        "zone": "front",
+        "detach_below": 70
+      },
+      {
+        "part": "hood",
+        "zone": "front",
+        "detach_below": 28
+      },
+      {
+        "part": "rear",
+        "zone": "rear",
+        "detach_below": 70
+      },
+      {
+        "part": "spoiler",
+        "zone": "rear",
+        "detach_below": 45
+      },
+      {
+        "part": "door_l",
+        "zone": "left",
+        "detach_below": 12
+      },
+      {
+        "part": "door_r",
+        "zone": "right",
+        "detach_below": 12
+      }
+    ]
+  }
 }

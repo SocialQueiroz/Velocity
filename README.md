@@ -1,6 +1,8 @@
 # VELOCITY — Ultimate Vehicle Mod
 
-Mod de veículos para **Minecraft Java 1.21.1 / Fabric / Java 21**. Versão atual: **Velo 0.08**. 🔊 [Ouça o motor (gravação no jogo)](docs/audio/velo-0.07-gravacao-no-jogo.ogg)
+Mod de veículos para **Minecraft Java 1.21.1 / Fabric / Java 21**. Versão atual: **Velo 0.09**. 🔊 [Ouça o motor (gravação no jogo)](docs/audio/velo-0.07-gravacao-no-jogo.ogg)
+
+![Velo 0.09](docs/screenshots/velo-0.09.png)
 
 ![Velo 0.08](docs/screenshots/velo-0.08.png)
 
@@ -27,7 +29,8 @@ art/tools/visual_test.sh # abre o jogo sem monitor e tira screenshots do veícul
    Clique no **capô** ou na **tampa traseira** para abri-los. **N** liga o motor.
 4. **W** acelera, **S** freia (parado: ré), **A/D** esterça, **Espaço** freio de mão, **J** faróis, **H** buzina,
    **,** / **.** setas, **K** pisca-alerta.
-5. **Shift** sai. **Shift + clique** na porta aberta fecha. **Shift + ataque** recolhe o veículo.
+5. Bateu? **Shift + clique com lingote de ferro** conserta (provisório). 
+6. **Shift** sai. **Shift + clique** na porta aberta fecha. **Shift + ataque** recolhe o veículo.
 6. Teste aderência: dirija sobre gelo, areia e grama.
 
 > ⚠️ O modelo visual atual é um **protótipo de cubos para validar pivôs e animação**, não o asset final.
