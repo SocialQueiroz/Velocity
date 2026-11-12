@@ -13,21 +13,22 @@ o que não pôde ser testado aparece nas notas em [`PATCH_NOTES.md`](PATCH_NOTES
 | **Velo 0.05** | Aurion VX — interior (painel, volante animado, bancos, console, pedais) + câmera interna | ✅ |
 | **Velo 0.06** | Animações: portas, capô, porta-malas, setas, pisca-alerta, ré, spoiler ativo | ✅ |
 | **Velo 0.07** | Áudio de motor em camadas por RPM/carga, partida, desligamento, buzina própria | ✅ |
-| Velo 0.08 | Física: suspensão por roda, inclinação de terreno, colisões com dano | ⏳ próxima |
-| Velo 0.09 | Câmbio manual, modos Arcade/Simulação/Personalizado, HUD completa | |
-| Velo 0.10 | Combustível: bomba de combustível (bloco funcional), carregador elétrico | |
-| Velo 0.11 | Superbike — modelo 3D | |
-| Velo 0.12 | Superbike — física de duas rodas, inclinação, piloto, cavalete | |
-| Velo 0.13 | Mecânica: grafo de componentes, fixadores, dependências de montagem | |
-| Velo 0.14 | Macaco hidráulico, cavaletes, chave de roda/soquete 3D | |
-| Velo 0.15 | **Teste obrigatório 1:** troca de pastilhas de freio completa | |
-| Velo 0.16 | Oficina: elevador 2 colunas, maca de mecânico, trabalho embaixo do carro | |
-| Velo 0.17 | Pintura: acabamentos, pintura por componente, pistola e cabine | |
-| Velo 0.18 | **Teste obrigatório 2:** funilaria do para-choque (remover, reparar, pintar, polir) | |
-| Velo 0.19 | Motor: talha, suporte giratório, retirada e desmontagem parcial | |
-| Velo 0.20 | **Teste obrigatório 3:** manutenção de motor ampliada | |
-| Velo 0.21 | Desgaste, falhas e diagnóstico (scanner, multímetro) | |
-| Velo 0.22 | Garagem: menu com visualização 3D, persistência de veículos | |
-| Velo 0.23+ | Expansão do catálogo (meta 100), body kits, detailing, multiplayer, LOD, otimização | |
+| Velo 0.08 | **Interior refeito** (pedido): painel esculpido, bancos anatômicos, volante redondo, texturas, luz ambiente | ⏳ próxima |
+| Velo 0.09 | **Dano realista** (pedido): colisão orientada, amassado no ponto do impacto, peças soltando, fumaça, fogo, explosão conforme a velocidade | |
+| Velo 0.10 | **Terreno por veículo** (pedido) + suspensão por roda e inclinação; primeira **4x4 / Monster Truck** | |
+| Velo 0.11 | **Montagem de carros** (pedido) — sistema de peças/encaixes, motores trocáveis (V8 aspirado, I4, V12…) com som próprio | |
+| Velo 0.12 | Turbo, **nitro**, aerofólios, **vidro fumê**, suspensões trocáveis (inclusive Monster Truck em esportivo) | |
+| Velo 0.13 | Oficina de montagem: bancada/menu de montagem com visualização 3D | |
+| Velo 0.14 | Câmbio manual, modos Arcade/Simulação/Personalizado, HUD completa, painel do carro mostrando velocidade/RPM | |
+| Velo 0.15 | Combustível: bomba de combustível (bloco funcional), carregador elétrico | |
+| Velo 0.16 | Superbike — modelo 3D | |
+| Velo 0.17 | Superbike — física de duas rodas, inclinação, piloto, cavalete | |
+| Velo 0.18 | Mecânica: grafo de componentes, fixadores, dependências de montagem | |
+| Velo 0.19 | Macaco hidráulico, cavaletes, chave de roda/soquete 3D | |
+| Velo 0.20 | **Teste obrigatório 1:** troca de pastilhas de freio completa | |
+| Velo 0.21 | Oficina: elevador 2 colunas, maca de mecânico, trabalho embaixo do carro | |
+| Velo 0.22 | Pintura: acabamentos, pintura por componente, pistola e cabine; **teste 2:** funilaria do para-choque | |
+| Velo 0.23 | Motor: talha, suporte giratório, desmontagem; **teste 3**; desgaste, falhas e diagnóstico | |
+| Velo 0.24+ | Garagem com visualização 3D e persistência; expansão do catálogo (meta 100), body kits, detailing, multiplayer, LOD, otimização | |
 
-A ordem pode mudar se uma versão revelar problemas — qualquer mudança aparece nas notas.
+Pedidos do dono do projeto: [`docs/PEDIDOS.md`](docs/PEDIDOS.md). A ordem pode mudar se uma versão revelar problemas — qualquer mudança aparece nas notas.
