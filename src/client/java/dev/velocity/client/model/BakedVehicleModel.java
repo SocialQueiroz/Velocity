@@ -18,13 +18,15 @@ public record BakedVehicleModel(Identifier id, Identifier texture, int defaultPa
     public static final int FLOATS_PER_VERTEX = 8;
     public static final int FLOATS_PER_QUAD = FLOATS_PER_VERTEX * 4;
 
-    public record Batch(String material, MaterialRole role, String lightChannel, float[] data) {
+    /** @param offColor cor (ARGB) multiplicada quando um material emissivo está apagado */
+    public record Batch(String material, MaterialRole role, String lightChannel, int offColor, float[] data) {
         public int quadCount() { return data.length / FLOATS_PER_QUAD; }
     }
 
     /**
      * @param animation fonte da animação procedural: "none", "wheel_spin" (rad), "steer" (rad das rodas),
-     *                  "steering_wheel" (rad das rodas × fator)
+     *                  "steering_wheel" (rad das rodas × fator), "door_l/door_r/hood/trunk/spoiler" (0..1),
+     *                  "rpm" e "speed" (fração 0..1 do fundo de escala do mostrador — ponteiros)
      * @param axis      eixo de rotação no espaço do modelo (normalizado)
      * @param factor    multiplicador aplicado ao valor da fonte
      */

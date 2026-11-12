@@ -94,7 +94,7 @@
       "pivot": [
         0.4,
         0.86,
-        0.14
+        0.06
       ],
       "animation": "steering_wheel",
       "axis": [
@@ -103,6 +103,34 @@
         0.9271838545667874
       ],
       "factor": 12.0
+    },
+    "needle_rpm": {
+      "pivot": [
+        0.48500000000000004,
+        0.877,
+        0.29
+      ],
+      "animation": "rpm",
+      "axis": [
+        -0.0,
+        -0.27563735581699916,
+        0.9612616959383189
+      ],
+      "factor": 4.71238898038469
+    },
+    "needle_speed": {
+      "pivot": [
+        0.315,
+        0.877,
+        0.29
+      ],
+      "animation": "speed",
+      "axis": [
+        -0.0,
+        -0.27563735581699916,
+        0.9612616959383189
+      ],
+      "factor": 4.71238898038469
     },
     "door_l": {
       "pivot": [
@@ -191,9 +219,34 @@
       "role": "emissive",
       "light": "always"
     },
-    "display": {
+    "ambient": {
       "role": "emissive",
-      "light": "engine"
+      "light": "engine",
+      "off": "#1A2A33"
+    },
+    "needle": {
+      "role": "emissive",
+      "light": "engine",
+      "off": "#4A1A12"
+    },
+    "start": {
+      "role": "emissive",
+      "light": "always"
+    },
+    "img_cluster": {
+      "role": "emissive",
+      "light": "engine",
+      "off": "#0C0C0C"
+    },
+    "img_nav": {
+      "role": "emissive",
+      "light": "engine",
+      "off": "#0C0C0C"
+    },
+    "img_climate": {
+      "role": "emissive",
+      "light": "engine",
+      "off": "#0C0C0C"
     },
     "amber_l": {
       "role": "emissive",

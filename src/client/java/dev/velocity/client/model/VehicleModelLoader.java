@@ -64,11 +64,13 @@ public final class VehicleModelLoader {
         // Materiais
         Map<String, MaterialRole> roles = new HashMap<>();
         Map<String, String> lights = new HashMap<>();
+        Map<String, Integer> offColors = new HashMap<>();
         if (json.has("materials")) {
             for (Map.Entry<String, JsonElement> e : json.getAsJsonObject("materials").entrySet()) {
                 JsonObject m = e.getValue().getAsJsonObject();
                 roles.put(e.getKey(), MaterialRole.valueOf(m.get("role").getAsString().toUpperCase(java.util.Locale.ROOT)));
                 if (m.has("light")) lights.put(e.getKey(), m.get("light").getAsString());
+                if (m.has("off")) offColors.put(e.getKey(), parseColor(m.get("off").getAsString()));
             }
         }
 
@@ -113,7 +115,7 @@ public final class VehicleModelLoader {
         Map<String, List<String>> children = new HashMap<>();
         decls.forEach((name, d) -> { if (d.parent() != null) children.computeIfAbsent(d.parent(), k -> new ArrayList<>()).add(name); });
         int[] tris = {0};
-        BakedVehicleModel.Part root = build("root", decls.get("root"), decls, children, mesh, roles, lights, tris);
+        BakedVehicleModel.Part root = build("root", decls.get("root"), decls, children, mesh, roles, lights, offColors, tris);
         // limites da malha em repouso (usados para o raycast de interação no cliente)
         Vector3f min = new Vector3f(Float.MAX_VALUE), max = new Vector3f(-Float.MAX_VALUE);
         for (Map<String, List<ObjParser.Face>> mats : mesh.parts().values())
@@ -126,17 +128,17 @@ public final class VehicleModelLoader {
 
     private static BakedVehicleModel.Part build(String name, Decl decl,
             Map<String, Decl> decls, Map<String, List<String>> children, ObjParser.Mesh mesh,
-            Map<String, MaterialRole> roles, Map<String, String> lights, int[] tris) {
+            Map<String, MaterialRole> roles, Map<String, String> lights, Map<String, Integer> offColors, int[] tris) {
         List<BakedVehicleModel.Batch> batches = new ArrayList<>();
         Map<String, List<ObjParser.Face>> byMaterial = mesh.parts().getOrDefault(name, Map.of());
         for (Map.Entry<String, List<ObjParser.Face>> e : byMaterial.entrySet()) {
             String mat = e.getKey();
             MaterialRole role = roles.getOrDefault(mat, MaterialRole.OPAQUE);
-            batches.add(new BakedVehicleModel.Batch(mat, role, lights.get(mat), bake(e.getValue(), tris)));
+            batches.add(new BakedVehicleModel.Batch(mat, role, lights.get(mat), offColors.getOrDefault(mat, 0xFF7A7A7A), bake(e.getValue(), tris)));
         }
         List<BakedVehicleModel.Part> kids = new ArrayList<>();
         for (String child : children.getOrDefault(name, List.of())) {
-            kids.add(build(child, decls.get(child), decls, children, mesh, roles, lights, tris));
+            kids.add(build(child, decls.get(child), decls, children, mesh, roles, lights, offColors, tris));
         }
         return new BakedVehicleModel.Part(name, decl.pivot(), decl.animation(), decl.axis(), decl.factor(),
                 List.copyOf(batches), List.copyOf(kids));

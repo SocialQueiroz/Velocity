@@ -22,59 +22,89 @@ def mix(a, b, t): return a + (b-a)*t
 
 # ---------------------------------------------------------------- atlas
 class Atlas:
-    """Cada material ocupa uma célula 16x16 de cor sólida num atlas 128x128."""
-    SIZE = 128
+    """Atlas 256x256: materiais de cor sólida em células 16x16 (linhas de cima) e imagens
+    (telas, mostradores) empacotadas em prateleiras na parte de baixo."""
+    SIZE = 256
+    IMG_Y0 = 112
     def __init__(self, colors):
-        self.colors = colors            # nome -> (r,g,b,a)
+        self.colors = dict(colors)       # nome -> (r,g,b,a)
         self.cells = {}
         for i, name in enumerate(colors):
-            self.cells[name] = (i % 8, i // 8)
-    def uv(self, mat):
+            self.cells[name] = (i % 16, i // 16)
+        if (len(colors) + 15) // 16 * 16 > self.IMG_Y0: raise ValueError("materiais demais para o atlas")
+        self.images = {}                 # nome -> (x, y, w, h, PIL.Image)
+        self._shelf = [0, self.IMG_Y0, 0]   # x, y, altura da prateleira
+    def add_image(self, name, img):
+        """Registra uma imagem (PIL, RGBA) como material mapeável por UV (0..1 dentro da imagem)."""
+        w, h = img.size
+        x, y, sh = self._shelf
+        if x + w + 2 > self.SIZE: x, y, sh = 0, y + sh + 2, 0
+        if y + h + 2 > self.SIZE: raise ValueError("atlas cheio: " + name)
+        self.images[name] = (x + 1, y + 1, w, h, img.convert("RGBA"))
+        self._shelf = [x + w + 2, y, max(sh, h)]
+        self.cells[name] = None
+    def uv(self, mat, local=None):
+        if mat in self.images:
+            x, y, w, h, _ = self.images[mat]
+            u, v = local if local is not None else (0.5, 0.5)
+            # meio texel para dentro evita vazamento do vizinho; OBJ usa V para cima
+            px = x + 0.5 + u * (w - 1); py = y + 0.5 + (1 - v) * (h - 1)
+            return (px / self.SIZE, 1 - py / self.SIZE)
         cx, cy = self.cells[mat]
         return ((cx*16+8)/self.SIZE, 1-(cy*16+8)/self.SIZE)
     def write_png(self, path):
+        from PIL import Image
         S = self.SIZE
-        px = [[(0, 0, 0, 0)]*S for _ in range(S)]
-        for name, (cx, cy) in self.cells.items():
-            c = self.colors[name]
-            for y in range(cy*16, cy*16+16):
-                for x in range(cx*16, cx*16+16):
-                    px[y][x] = c
-        raw = b"".join(b"\0"+bytes(v for p in row for v in p) for row in px)
-        ch = lambda t, d: struct.pack(">I", len(d))+t+d+struct.pack(">I", zlib.crc32(t+d) & 0xffffffff)
-        with open(path, "wb") as f:
-            f.write(b"\x89PNG\r\n\x1a\n"+ch(b"IHDR", struct.pack(">IIBBBBB", S, S, 8, 6, 0, 0, 0))
-                    + ch(b"IDAT", zlib.compress(raw, 9))+ch(b"IEND", b""))
+        out = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+        for name, cell in self.cells.items():
+            if cell is None: continue
+            cx, cy = cell
+            out.paste(Image.new("RGBA", (16, 16), tuple(self.colors[name])), (cx*16, cy*16))
+        for name, (x, y, w, h, img) in self.images.items():
+            # borda de 1 px repetida (evita costura com filtragem/mip)
+            out.paste(img.resize((w + 2, h + 2)), (x - 1, y - 1))
+            out.paste(img, (x, y))
+        out.save(path, optimize=True)
 
 # ---------------------------------------------------------------- malha
 class Mesh:
     def __init__(self, atlas):
         self.atlas = atlas
         self.parts = {}
-    def face(self, part, mat, pts, normals=None):
+    def face(self, part, mat, pts, normals=None, uvs=None):
+        """uvs: lista de (u,v) em 0..1 dentro da imagem do material (só para materiais de imagem)."""
         if mat not in self.atlas.cells: raise KeyError("material desconhecido: " + mat)
-        self.parts.setdefault(part, {}).setdefault(mat, []).append((list(pts), normals))
+        if not isinstance(part, str): raise TypeError("nome de parte inválido: %r" % (part,))
+        self.parts.setdefault(part, {}).setdefault(mat, []).append((list(pts), normals, uvs))
     def triangles(self):
-        return sum(len(p)-2 for mats in self.parts.values() for faces in mats.values() for p, _ in faces)
+        return sum(len(f[0])-2 for mats in self.parts.values() for faces in mats.values() for f in faces)
     def write_obj(self, path, header):
-        v, vn, body = [], [], []
-        vt = {m: i+1 for i, m in enumerate(self.atlas.cells)}
+        v, vn, vt, body = [], [], [], []
+        vt_solid = {}
+        def solid(mat):
+            if mat not in vt_solid:
+                vt.append(self.atlas.uv(mat)); vt_solid[mat] = len(vt)
+            return vt_solid[mat]
         for part, mats in self.parts.items():
             body.append(f"o {part}")
             for mat, faces in mats.items():
                 body.append(f"usemtl {mat}")
-                for pts, ns in faces:
+                for pts, ns, uvs in faces:
                     idx = []
                     for i, p in enumerate(pts):
                         v.append(p)
-                        if ns is not None:
-                            vn.append(ns[i]); idx.append(f"{len(v)}/{vt[mat]}/{len(vn)}")
+                        if uvs is not None:
+                            vt.append(self.atlas.uv(mat, uvs[i])); ti = len(vt)
                         else:
-                            idx.append(f"{len(v)}/{vt[mat]}")
+                            ti = solid(mat)
+                        if ns is not None:
+                            vn.append(ns[i]); idx.append(f"{len(v)}/{ti}/{len(vn)}")
+                        else:
+                            idx.append(f"{len(v)}/{ti}")
                     body.append("f "+" ".join(idx))
         out = [f"# {header}"]
         out += [f"v {x:.4f} {y:.4f} {z:.4f}" for x, y, z in v]
-        out += ["vt %.5f %.5f" % self.atlas.uv(m) for m in self.atlas.cells]
+        out += ["vt %.5f %.5f" % t for t in vt]
         out += [f"vn {x:.4f} {y:.4f} {z:.4f}" for x, y, z in vn]
         out += body
         with open(path, "w") as f: f.write("\n".join(out)+"\n")
@@ -108,8 +138,11 @@ def cylinder(m, part, mat, axis, center, radius, length, seg=16, cap_mat=None, h
 class Loft:
     """Superfície gerada por seções transversais (laços com o mesmo nº de pontos), em z crescente.
     Normais suaves ao longo de z; vincos nítidos entre segmentos do laço."""
-    def __init__(self, sections):
+    def __init__(self, sections, axis=2, coords=None):
+        """axis: eixo ao longo do qual as seções avançam (2 = z, 0 = x); coords: parâmetro escalar
+        por seção (substitui o eixo) — usado por decal() e passado ao mat_fn."""
         self.S = sections
+        self.coord = list(coords) if coords is not None else [sec[0][axis] for sec in sections]
         self.n = len(sections[0])
         self.fn = []
         for s in range(len(sections)-1):
@@ -119,13 +152,15 @@ class Loft:
                 a, b, c, d = sections[s][i], sections[s][j], sections[s+1][j], sections[s+1][i]
                 row.append(norm(cross(sub(c, a), sub(d, b))))
             self.fn.append(row)
-    def z(self, s): return self.S[s][0][2]
+    def z(self, s): return self.coord[s]
     def vnormal(self, s, i):
         acc = (0, 0, 0)
         for k in (s-1, s):
             if 0 <= k < len(self.fn): acc = add(acc, self.fn[k][i])
         return norm(acc)
-    def emit(self, m, part, mat_fn, cap_mat=None):
+    def emit(self, m, part, mat_fn, cap_mat=None, flip=False):
+        """flip=True inverte a orientação (normais para o outro lado) — útil para lofts espelhados."""
+        sgn = -1.0 if flip else 1.0
         for s in range(len(self.S)-1):
             for i in range(self.n):
                 zm = (self.z(s)+self.z(s+1))/2
@@ -135,14 +170,17 @@ class Loft:
                 j = (i+1) % self.n
                 p = [self.S[s][i], self.S[s][j], self.S[s+1][j], self.S[s+1][i]]
                 nn = [self.vnormal(s, i), self.vnormal(s, i), self.vnormal(s+1, i), self.vnormal(s+1, i)]
-                m.face(pname, mat, [p[0], p[3], p[2], p[1]], [nn[0], nn[3], nn[2], nn[1]])
+                nn = [mul(q, sgn) for q in nn]
+                quad, qn = [p[0], p[3], p[2], p[1]], [nn[0], nn[3], nn[2], nn[1]]
+                if flip: quad, qn = quad[::-1], qn[::-1]
+                m.face(pname, mat, quad, qn)
         if cap_mat:
-            for s, flip in ((0, True), (len(self.S)-1, False)):
+            for s, flip_cap in ((0, not flip), (len(self.S)-1, flip)):
                 ring = self.S[s]
                 c = tuple(sum(p[k] for p in ring)/self.n for k in range(3))
                 for i in range(self.n):
                     j = (i+1) % self.n
-                    tri = [c, ring[j], ring[i]] if flip else [c, ring[i], ring[j]]
+                    tri = [c, ring[j], ring[i]] if flip_cap else [c, ring[i], ring[j]]
                     m.face(part(0, self.z(s)) if callable(part) else part, cap_mat, tri)
     def decal(self, m, part, mat, seg, z0, z1, t0=0.0, t1=1.0, offset=0.004):
         """Aplica uma faixa sobre o segmento 'seg' do laço entre z0..z1 (frações t0..t1 do segmento),
@@ -199,3 +237,52 @@ def helix(m, part, mat, base, radius, height, turns, wire, seg_per_turn=12):
         rp = norm((p[0]-base[0], 0, p[2]-base[2])); rq = norm((q[0]-base[0], 0, q[2]-base[2]))
         m.face(part, mat, [sub(p, o), sub(q, o), add(q, o), add(p, o)])
         m.face(part, mat, [add(p, mul(rp, wire)), add(q, mul(rq, wire)), sub(q, mul(rq, wire)), sub(p, mul(rp, wire))])
+
+def tube(m, part, mat, path, radius, seg=8, closed=False, caps=True, mat_fn=None):
+    """Tubo de seção circular ao longo de uma polilinha (aros de volante, barras, tubulações).
+    radius pode ser número ou função(i) -> raio. mat_fn(i) -> material do trecho i (opcional).
+    Usa transporte paralelo do referencial para não torcer."""
+    n = len(path)
+    tang = []
+    for i in range(n):
+        a = path[(i-1) % n] if (closed or i > 0) else path[i]
+        b = path[(i+1) % n] if (closed or i < n-1) else path[i]
+        tang.append(norm(sub(b, a)))
+    ref = (0, 1, 0) if abs(tang[0][1]) < 0.9 else (1, 0, 0)
+    u = norm(cross(tang[0], ref))
+    rings = []
+    for i in range(n):
+        t = tang[i]
+        u = norm(sub(u, mul(t, u[0]*t[0]+u[1]*t[1]+u[2]*t[2])))      # reprojeta no plano normal
+        w = cross(t, u)
+        r = radius(i) if callable(radius) else radius
+        rings.append([(add(path[i], add(mul(u, r*math.cos(2*math.pi*k/seg)), mul(w, r*math.sin(2*math.pi*k/seg)))),
+                       norm(add(mul(u, math.cos(2*math.pi*k/seg)), mul(w, math.sin(2*math.pi*k/seg))))) for k in range(seg)])
+    count = n if closed else n-1
+    for i in range(count):
+        a, b = rings[i], rings[(i+1) % n]
+        mm = mat_fn(i) if mat_fn else mat
+        for k in range(seg):
+            k2 = (k+1) % seg
+            m.face(part, mm, [a[k][0], a[k2][0], b[k2][0], b[k][0]], [a[k][1], a[k2][1], b[k2][1], b[k][1]])
+    if caps and not closed:
+        m.face(part, mat, [p for p, _ in rings[0]][::-1]) if seg <= 4 else [m.face(part, mat, [path[0], rings[0][(k+1) % seg][0], rings[0][k][0]]) for k in range(seg)]
+        [m.face(part, mat, [path[-1], rings[-1][k][0], rings[-1][(k+1) % seg][0]]) for k in range(seg)]
+
+def quad_img(m, part, mat, center, right, up, w, h, normal_offset=0.0):
+    """Quad com imagem (material de imagem do atlas): centro, vetores 'direita' e 'cima' (como o
+    observador vê), largura e altura em metros."""
+    r, u = norm(right), norm(up)
+    nrm = cross(u, r)   # aponta para o observador quando right × up aponta para longe dele
+    c = add(center, mul(nrm, normal_offset))
+    p = lambda a, b: add(c, add(mul(r, a*w/2), mul(u, b*h/2)))
+    m.face(part, mat, [p(-1, -1), p(1, -1), p(1, 1), p(-1, 1)], None, [(0, 0), (1, 0), (1, 1), (0, 1)])
+
+def obox(m, part, mat, center, right, up, w, h, d):
+    """Caixa orientada: centro, eixos 'right' e 'up' (ortogonais), dimensões w (right) × h (up) × d (right×up)."""
+    r, u = norm(right), norm(up); n = cross(r, u)
+    def P(a, b, c): return add(center, add(mul(r, a*w/2), add(mul(u, b*h/2), mul(n, c*d/2))))
+    for f in ([P(-1,-1,1),P(1,-1,1),P(1,1,1),P(-1,1,1)], [P(1,-1,-1),P(-1,-1,-1),P(-1,1,-1),P(1,1,-1)],
+              [P(1,-1,1),P(1,-1,-1),P(1,1,-1),P(1,1,1)], [P(-1,-1,-1),P(-1,-1,1),P(-1,1,1),P(-1,1,-1)],
+              [P(-1,1,1),P(1,1,1),P(1,1,-1),P(-1,1,-1)], [P(-1,-1,-1),P(1,-1,-1),P(1,-1,1),P(-1,-1,1)]):
+        m.face(part, mat, f)

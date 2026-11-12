@@ -4,6 +4,7 @@ import dev.velocity.client.model.BakedVehicleModel;
 import dev.velocity.client.model.VehicleMeshRenderer;
 import dev.velocity.client.model.VehicleModelManager;
 import dev.velocity.core.VelocityMod;
+import dev.velocity.vehicle.VehicleDefinitionClientHints;
 import dev.velocity.vehicle.VehicleEntity;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumer;
@@ -47,7 +48,9 @@ public class VehicleEntityRenderer extends EntityRenderer<VehicleEntity> {
                     model.defaultPaint(), entity.areLightsOn(), entity.isBraking(), entity.isEngineOn(), animScratch,
                     blink && (hazard || entity.hasVehicleFlag(VehicleEntity.FLAG_TURN_L)),
                     blink && (hazard || entity.hasVehicleFlag(VehicleEntity.FLAG_TURN_R)),
-                    entity.isReversing());
+                    entity.isReversing(),
+                    Math.min(1f, entity.getRpm() / VehicleDefinitionClientHints.DEFAULT.gaugeMaxRpm()),
+                    Math.min(1f, Math.abs(entity.getSpeed()) * 3.6f / VehicleDefinitionClientHints.DEFAULT.gaugeMaxKmh()));
             VehicleMeshRenderer.render(model, pose, matrices, consumers, light);
         } else {
             renderFallback(entity, tickDelta, matrices, consumers, light);

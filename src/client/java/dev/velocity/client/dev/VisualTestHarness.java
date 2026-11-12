@@ -46,8 +46,9 @@ public final class VisualTestHarness {
                 {5.5, 1.6, 35, 0, 0.6, 0}, {5.5, 1.8, 215, 0, 0.6, 0}, {6.5, 1.0, 90, 0, 0.6, 0}, {6, 1.2, 0, 0, 0.6, 0},
                 {0.01, 9, 0, 0, 0.6, 0}, {2.6, 1.75, 62, 0, 0.6, 0},
                 {1.0, 0.50, 80, 0.81, 0.34, 1.28}, {1.0, 0.50, 100, 0.82, 0.34, -1.34}, {0.9, 0.75, 35, 0.81, 0.34, 1.28},
-                {1.03, 1.08, 223, 0.35, 0.85, 0.30}, {0.92, 1.06, 180, 0.40, 0.95, 0.62}};
-        String[] names = {"front34", "rear34", "side", "front", "top", "low_wheel", "brake_fl", "brake_rl", "brake_fl_front", "interior", "cockpit"};
+                {1.03, 1.08, 223, 0.35, 0.85, 0.30}, {0.92, 1.06, 180, 0.40, 0.95, 0.62},
+                {0.75, 0.98, 0, 0, 0.60, -0.60}, {1.0, 0.80, 270, 0.83, 0.55, -0.20}};
+        String[] names = {"front34", "rear34", "side", "front", "top", "low_wheel", "brake_fl", "brake_rl", "brake_fl_front", "interior", "cockpit", "seats", "door_panel"};
         for (int i = 0; i < v.length; i++) {
             final String name = names[i];
             final double[] q = v[i];
@@ -161,6 +162,7 @@ public final class VisualTestHarness {
                 VelocityMod.LOGGER.info("AUDIOTEST tick={} rpm={} marcha={} kmh={} carga={} slip={}", c.world.getTime(),
                         Math.round(cv.getRpm()), cv.getGear(), Math.round(Math.abs(cv.getSpeed()) * 3.6f), cv.getLoad(), cv.getTireSlip()); }));
         }
+        steps.add(new Step(t + 150, c -> shot(c, "driving_cockpit")));   // ponteiros em movimento
         steps.add(new Step(t + 180, c -> { c.options.forwardKey.setPressed(false);
             VelocityMod.LOGGER.info("AUDIOTEST marco solta tick={}", c.world.getTime()); }));
         steps.add(new Step(t + 220, c -> { c.options.backKey.setPressed(true);

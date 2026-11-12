@@ -1,6 +1,6 @@
 # VELOCITY — Arquitetura Técnica (v0.1, Fase 1)
 
-> Versão: Velo 0.07. Estado honesto: este documento descreve o **alvo**. A seção "Status" no fim lista o que existe
+> Versão: Velo 0.08. Estado honesto: este documento descreve o **alvo**. A seção "Status" no fim lista o que existe
 > de fato no código. Nada que esteja marcado como PENDENTE foi implementado.
 
 ## A. Arquitetura técnica

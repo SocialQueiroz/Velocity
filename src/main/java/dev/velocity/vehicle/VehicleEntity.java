@@ -89,6 +89,13 @@ public class VehicleEntity extends Entity {
     private final int[] doorCloseTimer = new int[2];
     private boolean turnArmed;
 
+    // Cliente: interpolação da posição recebida do servidor (sem isto o veículo "pula" a 20 Hz e a
+    // câmera do ocupante fica para trás em alta velocidade).
+    private static final int CLIENT_LERP_STEPS = 2;
+    private int lerpSteps;
+    private double lerpX, lerpY, lerpZ;
+    private float lerpYaw, lerpPitch;
+
     // Cliente: frações de abertura (0..1) para animação, com valor anterior para interpolar.
     public final float[] anim = new float[ANIM_COUNT];
     public final float[] prevAnim = new float[ANIM_COUNT];
@@ -390,7 +397,27 @@ public class VehicleEntity extends Entity {
         if (isOnGround()) setVelocity(getVelocity().x, 0, getVelocity().z);
     }
 
+    @Override
+    public void updateTrackedPositionAndAngles(double x, double y, double z, float yaw, float pitch, int interpolationSteps) {
+        lerpX = x; lerpY = y; lerpZ = z;
+        lerpYaw = yaw; lerpPitch = pitch;
+        lerpSteps = CLIENT_LERP_STEPS;
+    }
+
+    @Override public double getLerpTargetX() { return lerpSteps > 0 ? lerpX : getX(); }
+    @Override public double getLerpTargetY() { return lerpSteps > 0 ? lerpY : getY(); }
+    @Override public double getLerpTargetZ() { return lerpSteps > 0 ? lerpZ : getZ(); }
+    @Override public float getLerpTargetYaw() { return lerpSteps > 0 ? lerpYaw : getYaw(); }
+    @Override public float getLerpTargetPitch() { return lerpSteps > 0 ? lerpPitch : getPitch(); }
+
     private void clientTick() {
+        if (lerpSteps > 0) {
+            double f = 1.0 / lerpSteps;
+            setPosition(getX() + (lerpX - getX()) * f, getY() + (lerpY - getY()) * f, getZ() + (lerpZ - getZ()) * f);
+            setRotation(getYaw() + MathHelper.wrapDegrees(lerpYaw - getYaw()) * (float) f,
+                    getPitch() + (lerpPitch - getPitch()) * (float) f);
+            lerpSteps--;
+        }
         System.arraycopy(anim, 0, prevAnim, 0, ANIM_COUNT);
         approach(ANIM_DOOR_L, hasVehicleFlag(FLAG_DOOR_L), 0.09f);
         approach(ANIM_DOOR_R, hasVehicleFlag(FLAG_DOOR_R), 0.09f);

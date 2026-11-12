@@ -23,7 +23,8 @@ public final class VehicleMeshRenderer {
      * @param anim frações 0..1 suavizadas indexadas por VehicleEntity.ANIM_*
      */
     public record Pose(float wheelSpinRad, float steerRad, int paintArgb, boolean headlights, boolean brake, boolean engineOn,
-                       float[] anim, boolean turnLeftOn, boolean turnRightOn, boolean reverse) {}
+                       float[] anim, boolean turnLeftOn, boolean turnRightOn, boolean reverse,
+                       float rpmFraction, float speedFraction) {}
 
     public static void render(BakedVehicleModel model, Pose pose, MatrixStack matrices, VertexConsumerProvider consumers, int light) {
         RenderLayer opaque = RenderLayer.getEntityCutoutNoCull(model.texture());
@@ -43,6 +44,8 @@ public final class VehicleMeshRenderer {
             case "hood" -> pose.anim()[dev.velocity.vehicle.VehicleEntity.ANIM_HOOD];
             case "trunk" -> pose.anim()[dev.velocity.vehicle.VehicleEntity.ANIM_TRUNK];
             case "spoiler" -> pose.anim()[dev.velocity.vehicle.VehicleEntity.ANIM_SPOILER];
+            case "rpm" -> pose.rpmFraction();
+            case "speed" -> pose.speedFraction();
             default -> 0f;
         } * part.factor();
         if (angle != 0f) {
@@ -69,7 +72,7 @@ public final class VehicleMeshRenderer {
                             : "reverse".equals(b.lightChannel()) ? pose.reverse()
                             : false;
                     if (on) l = LightmapTextureManager.MAX_LIGHT_COORDINATE;
-                    else color = 0xFF7A7A7A; // lente apagada mais escura
+                    else color = b.offColor(); // lente/tela apagada
                 }
                 default -> { }
             }

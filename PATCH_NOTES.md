@@ -5,6 +5,57 @@ Downloads: pasta [`releases/`](releases/). Instale o jar em `.minecraft/mods` ju
 
 ---
 
+## Velo 0.08 — Interior refeito
+**Jar:** `releases/Velocity-Velo-0.08-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
+
+![Velo 0.08](docs/screenshots/velo-0.08.png)
+
+Pedido atendido: *"o interior tá bem feio"* → interior refeito do zero.
+
+### Novidades
+- **Painel esculpido** (superfície curva, não mais blocos): capuz do quadro voltado ao motorista,
+  recorte no lado do passageiro com aplique de carbono, friso de alumínio e costura amarela.
+- **Quadro de instrumentos de verdade:** conta-giros e velocímetro desenhados, com
+  **ponteiros que funcionam** (RPM até 8.000 e velocidade até 340 km/h), acesos com o motor.
+- **Tela central flutuante** com navegação, voltada ao motorista; painel de climatização;
+  difusores finos no centro e redondos (tipo turbina) nas pontas.
+- **Volante novo:** aro tubular redondo de base reta, empunhaduras em alcântara, marca amarela
+  de 12 h, cubo arredondado com emblema, raios com comandos e aletas de troca; coluna com
+  alavancas de seta e limpador.
+- **Bancos concha anatômicos:** assento e encosto com abas laterais, apoio de cabeça integrado,
+  centro em couro caramelo, costura amarela e casco traseiro em carbono.
+- **Console central contínuo** do painel ao apoio de braço: seletor de câmbio com pomo
+  arredondado, seletor de modos giratório, botão de partida vermelho, porta-copos.
+- **Forros de porta** com apoio de braço esculpido, puxador de alumínio, alto-falante e comandos
+  dos vidros; soleiras de alumínio; tapetes com debrum amarelo; pedais com borrachas e descanso de pé.
+- **Dois tons:** preto + couro caramelo, com alumínio, carbono e preto brilhante.
+- **Luz ambiente** azul no painel, console e portas (acende com o motor).
+- Para-sóis, retrovisor interno novo, travessa e alto-falante no anteparo traseiro.
+
+### Correções importantes
+- **Câmera interna ficava para trás com o carro em movimento** (a 118 km/h ela aparecia atrás do
+  vidro traseiro) e o carro se movia "aos pulos" (20 quadros por segundo). O cliente agora
+  interpola a posição do veículo — movimento suave e câmera presa ao banco. Esse defeito existia
+  desde a Velo 0.01 e só apareceu quando o teste automático fotografou o painel em movimento.
+
+### Para quem cria veículos
+- Texturas com **imagens** no atlas (telas, mostradores) e UV por vértice.
+- Novas fontes de animação `rpm` e `speed` (ponteiros) e cor de "apagado" por material (`off`).
+- `meshlib`: tubos ao longo de curvas, caixas orientadas, lofts em qualquer eixo.
+
+### Testado
+- Teste visual: cockpit parado e **a 118 km/h** (ponteiros marcando ~7.000 rpm / ~120 km/h,
+  conferindo com o log da física), bancos, forro de porta, vista do passageiro.
+
+### Limitações conhecidas
+- O modelo passou a **~20.000 triângulos** (meta: 12.000 por carro). Versões simplificadas para
+  longe (LOD) ainda não existem — com muitos carros na tela pode pesar.
+- Superfícies ainda em cores sólidas (sem textura de couro/carbono trançado).
+- Navegação e climatização são imagens fixas; os ponteiros são reais.
+- Braços do motorista não aparecem no volante.
+
+---
+
 ## Velo 0.07 — Áudio automotivo
 **Jar:** `releases/Velocity-Velo-0.07-MC1.21.1.jar` · Minecraft 1.21.1 · Fabric API 0.116.18
 

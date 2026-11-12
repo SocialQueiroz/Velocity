@@ -11,7 +11,7 @@ Registro do que foi pedido, para orientar as próximas versões. Status atualiza
 - **Plano:** refazer o interior com geometria curva (loft, como a carroceria): painel esculpido,
   bancos com formato anatômico, console integrado, volante com aro redondo de verdade,
   materiais com textura (couro, alcântara, carbono), iluminação ambiente.
-- **Status:** pendente — **Velo 0.08** (passa na frente da física).
+- **Status:** ✅ entregue na **Velo 0.08** (aguardando sua opinião).
 
 ### 2. Dano realista: amassa onde bate, explode conforme a velocidade
 - Batida fraca → **amassa no ponto exato do impacto** (deformação local da malha 3D, não só
